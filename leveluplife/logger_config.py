@@ -4,7 +4,7 @@ from loguru import logger
 
 
 def filter_record(record):
-    if "lul" in record["file"].path:
+    if "leveluplife" in record["file"].path:
         return True
     return False
 
