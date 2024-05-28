@@ -4,12 +4,10 @@ from fastapi import FastAPI
 
 from leveluplife.api import create_app
 from leveluplife.database import create_app_engine, create_db_and_tables
-from leveluplife.logger_config import configure_logger
 
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
-    configure_logger()
     engine = create_app_engine()
     create_db_and_tables(engine)
     engine.dispose()
