@@ -7,9 +7,9 @@ from leveluplife.models.user import UserBase
 class UserView(UserBase):
     id: UUID
     created_at: datetime
-    strength: int = 5
-    intelligence: int = 5
-    agility: int = 5
-    wise: int = 5
-    psycho: int = 5
+    strength: int = 0
+    intelligence: int = 0
+    agility: int = 0
+    wise: int = 0
+    psycho: int = 0
     experience: int = 0
