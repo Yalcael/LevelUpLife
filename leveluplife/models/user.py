@@ -1,10 +1,8 @@
 from datetime import datetime
 from enum import Enum
-from typing import Optional
 from uuid import UUID, uuid4
 from pydantic import EmailStr
 from sqlmodel import Field, AutoString
-
 from leveluplife.models.shared import DBModel
 
 
@@ -38,6 +36,9 @@ class UserBase(DBModel):
     username: str = Field(default=None, index=True, min_length=3)
     email: EmailStr = Field(unique=True, index=True, sa_type=AutoString)
     tribe: Tribe
+    biography: str | None = Field(default=None, max_length=500)
+    profile_picture: str | None = Field(default=None, max_length=500)
+    background_image: str | None = Field(default=None, max_length=500)
 
 
 class User(UserBase, table=True):
@@ -57,15 +58,18 @@ class UserCreate(UserBase):
 
 
 class UserUpdate(DBModel):
-    username: Optional[str] | None = None
-    email: Optional[EmailStr] | None = None
-    strength: Optional[int] | None = None
-    intelligence: Optional[int] | None = None
-    agility: Optional[int] | None = None
-    wise: Optional[int] | None = None
-    psycho: Optional[int] | None = None
-    experience: Optional[int] | None = None
-    tribe: Optional[Tribe] | None = None
+    username: str | None = None
+    email: EmailStr | None = None
+    strength: int | None = None
+    intelligence: int | None = None
+    agility: int | None = None
+    wise: int | None = None
+    psycho: int | None = None
+    experience: int | None = None
+    tribe: Tribe | None = None
+    biography: str | None = None
+    profile_picture: str | None = None
+    background_image: str | None = None
 
 
 class UserUpdatePassword(DBModel):

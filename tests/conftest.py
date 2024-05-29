@@ -1,1 +1,53 @@
-pass
+import pytest
+from faker import Faker
+from fastapi import FastAPI
+from sqlalchemy import create_engine
+from sqlmodel import Session, SQLModel
+from starlette.testclient import TestClient
+from testcontainers.postgres import PostgresContainer
+
+from leveluplife.api import create_app
+from leveluplife.controllers.user import UserController
+from main import lifespan
+
+
+@pytest.fixture(name="faker")
+def get_faker() -> Faker:
+    return Faker("fr_FR")
+
+
+@pytest.fixture(name="postgres", scope="session", autouse=True)
+def generate_test_pgsql():
+    with PostgresContainer("postgres:latest") as postgres:
+        postgres.with_env("POSTGRES_USER", "test")
+        postgres.with_env("POSTGRES_PASSWORD", "testpassword")
+        postgres.with_env("POSTGRES_DB", "testdb")
+        yield postgres
+
+
+@pytest.fixture(name="engine", scope="session", autouse=True)
+def fixture_engine(postgres):
+    engine = create_engine(postgres.get_connection_url())
+    SQLModel.metadata.create_all(engine)
+    yield engine
+
+
+@pytest.fixture(name="session")
+def fixture_session(engine) -> Session:
+    with Session(engine) as session:
+        yield session
+
+
+@pytest.fixture(name="user_controller")
+def get_user_controller(session: Session) -> UserController:
+    return UserController(session)
+
+
+@pytest.fixture(name="app")
+def get_test_app() -> FastAPI:
+    return create_app(lifespan=lifespan)
+
+
+@pytest.fixture(name="client")
+def get_test_client(app: FastAPI) -> TestClient:
+    return TestClient(app)
