@@ -33,7 +33,7 @@ class Tribe(str, Enum):
 
 
 class UserBase(DBModel):
-    username: str = Field(default=None, index=True, min_length=3)
+    username: str = Field(default=None, index=True, min_length=3, max_length=18)
     email: EmailStr = Field(unique=True, index=True, sa_type=AutoString)
     tribe: Tribe
     biography: str | None = Field(default=None, max_length=500)

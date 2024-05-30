@@ -1,5 +1,7 @@
+from typing import Sequence
+
 from sqlalchemy.exc import IntegrityError
-from sqlmodel import Session
+from sqlmodel import Session, select
 
 from leveluplife.models.error import UserAlreadyExistsError
 from leveluplife.models.user import UserCreate, User, Tribe
@@ -63,3 +65,6 @@ class UserController:
                 "wise": 5,
                 "psycho": 5,
             }
+
+    async def get_users(self) -> Sequence[User]:
+        return self.session.exec(select(User)).all()

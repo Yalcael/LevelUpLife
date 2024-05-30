@@ -83,3 +83,55 @@ async def test_create_user_raise_user_already_exists_error(
         "message": f"User with the email {user_data['email']} already exists.",
         "status_code": 409,
     }
+
+
+@pytest.mark.asyncio
+async def test_get_users(
+    user_controller: UserController, client: TestClient, app: FastAPI
+) -> None:
+    mock_users = [
+        User(
+            id=uuid.uuid4(),
+            created_at=datetime(2020, 1, 1),
+            tribe=Tribe("Nosferati"),
+            username="JohnDoe",
+            email="john.doe@test.com",
+            password="johndoepassword",
+        ),
+        User(
+            id=uuid.uuid4(),
+            created_at=datetime(2022, 2, 2),
+            tribe=Tribe("Saharans"),
+            username="JaneDoe",
+            email="jane.doe@test.com",
+            password="janedoepassword",
+        ),
+    ]
+
+    def _mock_get_users():
+        user_controller.get_users = AsyncMock(return_value=mock_users)
+        return user_controller
+
+    app.dependency_overrides[get_user_controller] = _mock_get_users
+
+    get_user_response = client.get("/users")
+    assert get_user_response.status_code == 200
+    assert get_user_response.json() == [
+        {
+            "id": str(user.id),
+            "created_at": user.created_at.isoformat(),
+            "tribe": user.tribe.value,
+            "username": user.username,
+            "email": user.email,
+            "experience": user.experience,
+            "biography": user.biography,
+            "background_image": user.background_image,
+            "profile_picture": user.profile_picture,
+            "agility": user.agility,
+            "intelligence": user.intelligence,
+            "psycho": user.psycho,
+            "strength": user.strength,
+            "wise": user.wise,
+        }
+        for user in mock_users
+    ]

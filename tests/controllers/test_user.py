@@ -206,3 +206,34 @@ async def test_create_user_already_exists_error(
     # Assert
     with pytest.raises(UserAlreadyExistsError):
         await user_controller.create_user(user_create)
+
+
+@pytest.mark.asyncio
+async def test_get_users(
+    user_controller: UserController, faker: Faker, session: Session
+) -> None:
+    number_users = 5
+    created_users = []
+    for _ in range(number_users):
+        user_create = UserCreate(
+            username=faker.user_name(),
+            email=faker.email(),
+            password=faker.password(),
+            tribe=random.choice(list(Tribe)),
+        )
+        created_user = await user_controller.create_user(user_create)
+        created_users.append(created_user)
+
+    all_users = await user_controller.get_users()
+
+    assert len(all_users) == number_users
+
+    for i, created_user in enumerate(created_users):
+        assert all_users[i].username == created_user.username
+        assert all_users[i].email == created_user.email
+        assert all_users[i].tribe == created_user.tribe
+        assert all_users[i].intelligence == created_user.intelligence
+        assert all_users[i].strength == created_user.strength
+        assert all_users[i].agility == created_user.agility
+        assert all_users[i].wise == created_user.wise
+        assert all_users[i].psycho == created_user.psycho

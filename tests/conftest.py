@@ -38,6 +38,13 @@ def fixture_session(engine) -> Session:
         yield session
 
 
+@pytest.fixture(autouse=True)
+def clear_db(engine):
+    yield
+    SQLModel.metadata.drop_all(engine)
+    SQLModel.metadata.create_all(engine)
+
+
 @pytest.fixture(name="user_controller")
 def get_user_controller(session: Session) -> UserController:
     return UserController(session)
