@@ -1,4 +1,5 @@
 from typing import Sequence
+from uuid import UUID
 
 from fastapi import APIRouter, Depends
 
@@ -26,3 +27,10 @@ async def get_users(
     *, user_controller: UserController = Depends(get_user_controller)
 ) -> Sequence[UserView]:
     return [UserView.model_validate(user) for user in await user_controller.get_users()]
+
+
+@router.get("/{user_id}", response_model=UserView)
+async def get_user_by_id(
+    *, user_id: UUID, user_controller: UserController = Depends(get_user_controller)
+) -> UserView:
+    return UserView.model_validate(await user_controller.get_user_by_id(user_id))

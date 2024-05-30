@@ -5,7 +5,7 @@ from faker import Faker
 from sqlmodel import Session, select
 
 from leveluplife.controllers.user import UserController
-from leveluplife.models.error import UserAlreadyExistsError
+from leveluplife.models.error import UserAlreadyExistsError, UserNotFoundError
 from leveluplife.models.user import UserCreate, Tribe, User
 
 
@@ -209,9 +209,7 @@ async def test_create_user_already_exists_error(
 
 
 @pytest.mark.asyncio
-async def test_get_users(
-    user_controller: UserController, faker: Faker, session: Session
-) -> None:
+async def test_get_users(user_controller: UserController, faker: Faker) -> None:
     number_users = 5
     created_users = []
     for _ in range(number_users):
@@ -237,3 +235,32 @@ async def test_get_users(
         assert all_users[i].agility == created_user.agility
         assert all_users[i].wise == created_user.wise
         assert all_users[i].psycho == created_user.psycho
+
+
+@pytest.mark.asyncio
+async def test_get_user_by_id(user_controller: UserController, faker: Faker) -> None:
+    user_create = UserCreate(
+        username=faker.user_name(),
+        email=faker.email(),
+        password=faker.password(),
+        tribe=random.choice(list(Tribe)),
+    )
+
+    created_user = await user_controller.create_user(user_create)
+
+    retrieved_user = await user_controller.get_user_by_id(created_user.id)
+
+    assert retrieved_user.id == created_user.id
+    assert retrieved_user.username == user_create.username
+    assert retrieved_user.email == user_create.email
+    assert retrieved_user.tribe == user_create.tribe
+    assert retrieved_user.password == user_create.password
+
+
+@pytest.mark.asyncio
+async def test_get_user_by_id_raise_user_not_found_error(
+    user_controller: UserController, faker: Faker
+) -> None:
+    non_existent_user_id = faker.uuid4()
+    with pytest.raises(UserNotFoundError):
+        await user_controller.get_user_by_id(non_existent_user_id)

@@ -8,7 +8,7 @@ from starlette.testclient import TestClient
 
 from leveluplife.controllers.user import UserController
 from leveluplife.dependencies import get_user_controller
-from leveluplife.models.error import UserAlreadyExistsError
+from leveluplife.models.error import UserAlreadyExistsError, UserNotFoundError
 from leveluplife.models.user import User, Tribe
 
 
@@ -135,3 +135,66 @@ async def test_get_users(
         }
         for user in mock_users
     ]
+
+
+@pytest.mark.asyncio
+async def test_get_user_by_id(
+    user_controller: UserController, client: TestClient, app: FastAPI
+) -> None:
+    _id = uuid.uuid4()
+
+    def _mock_get_user_by_id():
+        user_controller.get_user_by_id = AsyncMock(
+            return_value=User(
+                id=_id,
+                created_at=datetime(2020, 1, 1),
+                tribe=Tribe("Neutrals"),
+                username="JohnDoe",
+                email="john.doe@test.com",
+                password="janedoepassword",
+            ),
+        )
+        return user_controller
+
+    app.dependency_overrides[get_user_controller] = _mock_get_user_by_id
+    get_user_by_id_response = client.get(f"/users/{_id}")
+    assert get_user_by_id_response.status_code == 200
+    assert get_user_by_id_response.json() == {
+        "id": str(_id),
+        "created_at": "2020-01-01T00:00:00",
+        "tribe": "Neutrals",
+        "username": "JohnDoe",
+        "email": "john.doe@test.com",
+        "experience": 0,
+        "biography": None,
+        "background_image": None,
+        "profile_picture": None,
+        "agility": 0,
+        "intelligence": 0,
+        "psycho": 0,
+        "strength": 0,
+        "wise": 0,
+    }
+
+
+@pytest.mark.asyncio
+async def test_get_user_by_id_raise_user_not_found_error(
+    user_controller: UserController, client: TestClient, app: FastAPI
+) -> None:
+    _id = uuid.uuid4()
+
+    def _mock_get_user_by_id():
+        user_controller.get_user_by_id = AsyncMock(
+            side_effect=UserNotFoundError(user_id=_id)
+        )
+        return user_controller
+
+    app.dependency_overrides[get_user_controller] = _mock_get_user_by_id
+
+    get_user_by_id_response = client.get(f"/users/{_id}")
+    assert get_user_by_id_response.status_code == 404
+    assert get_user_by_id_response.json() == {
+        "message": f"User with ID {_id} not found",
+        "name": "UserNotFoundError",
+        "status_code": 404,
+    }

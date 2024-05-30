@@ -1,9 +1,10 @@
 from typing import Sequence
+from uuid import UUID
 
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlmodel import Session, select
 
-from leveluplife.models.error import UserAlreadyExistsError
+from leveluplife.models.error import UserAlreadyExistsError, UserNotFoundError
 from leveluplife.models.user import UserCreate, User, Tribe
 
 
@@ -68,3 +69,9 @@ class UserController:
 
     async def get_users(self) -> Sequence[User]:
         return self.session.exec(select(User)).all()
+
+    async def get_user_by_id(self, user_id: UUID) -> User:
+        try:
+            return self.session.exec(select(User).where(User.id == user_id)).one()
+        except NoResultFound:
+            raise UserNotFoundError(user_id=user_id)
