@@ -46,3 +46,10 @@ async def update_user(
     return UserView.model_validate(
         await user_controller.update_user(user_id, user_update)
     )
+
+
+@router.delete("/{user_id}", status_code=204)
+async def delete_user(
+    *, user_id: UUID, user_controller: UserController = Depends(get_user_controller)
+) -> None:
+    await user_controller.delete_user(user_id)

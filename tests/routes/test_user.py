@@ -266,3 +266,35 @@ async def test_update_user_raise_user_not_found_error(
     app.dependency_overrides[get_user_controller] = _mock_update_user
     update_user_response = client.patch(f"/users/{_id}", json=user_update_data)
     assert update_user_response.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_delete_user(
+    user_controller: UserController, client: TestClient, app: FastAPI
+) -> None:
+    _id = uuid.uuid4()
+
+    def _mock_delete_user():
+        user_controller.delete_user = AsyncMock(return_value=None)
+        return user_controller
+
+    app.dependency_overrides[get_user_controller] = _mock_delete_user
+    delete_user_response = client.delete(f"/users/{_id}")
+    assert delete_user_response.status_code == 204
+
+
+@pytest.mark.asyncio
+async def test_delete_user_raise_user_not_found_error(
+    user_controller: UserController, client: TestClient, app: FastAPI
+) -> None:
+    _id = uuid.uuid4()
+
+    def _mock_delete_user():
+        user_controller.delete_user = AsyncMock(
+            side_effect=UserNotFoundError(user_id=_id)
+        )
+        return user_controller
+
+    app.dependency_overrides[get_user_controller] = _mock_delete_user
+    delete_user_response = client.delete(f"/users/{_id}")
+    assert delete_user_response.status_code == 404

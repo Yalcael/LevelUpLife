@@ -87,3 +87,11 @@ class UserController:
             return db_user
         except NoResultFound:
             raise UserNotFoundError(user_id=user_id)
+
+    async def delete_user(self, user_id: UUID) -> None:
+        try:
+            db_user = self.session.exec(select(User).where(User.id == user_id)).one()
+            self.session.delete(db_user)
+            self.session.commit()
+        except NoResultFound:
+            raise UserNotFoundError(user_id=user_id)
