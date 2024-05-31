@@ -3,7 +3,7 @@ from leveluplife.routes.user import router as user_router
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import JSONResponse
-
+from loguru import logger
 from leveluplife.models.error import BaseError
 
 
@@ -22,6 +22,7 @@ def create_app(lifespan) -> FastAPI:
 
     @app.exception_handler(BaseError)
     async def exception_handler(request: Request, exc: BaseError) -> JSONResponse:
+        logger.error(f"{type(exc).__name__}: {exc.message}", exc_info=exc)
         return JSONResponse(
             status_code=exc.status_code,
             content={

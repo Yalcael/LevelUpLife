@@ -1,6 +1,6 @@
 from typing import Sequence
 from uuid import UUID
-
+from loguru import logger
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlmodel import Session, select
 
@@ -20,6 +20,7 @@ class UserController:
             self.session.add(new_user)
             self.session.commit()
             self.session.refresh(new_user)
+            logger.info(f"New user created: {new_user.username}")
             return new_user
         except IntegrityError:
             raise UserAlreadyExistsError(email=user_create.email)
@@ -68,10 +69,12 @@ class UserController:
             }
 
     async def get_users(self) -> Sequence[User]:
+        logger.info("Getting users")
         return self.session.exec(select(User)).all()
 
     async def get_user_by_id(self, user_id: UUID) -> User:
         try:
+            logger.info("Getting user by id")
             return self.session.exec(select(User).where(User.id == user_id)).one()
         except NoResultFound:
             raise UserNotFoundError(user_id=user_id)
@@ -84,6 +87,7 @@ class UserController:
             self.session.add(db_user)
             self.session.commit()
             self.session.refresh(db_user)
+            logger.info(f"Updated user: {db_user.username}")
             return db_user
         except NoResultFound:
             raise UserNotFoundError(user_id=user_id)
@@ -93,5 +97,17 @@ class UserController:
             db_user = self.session.exec(select(User).where(User.id == user_id)).one()
             self.session.delete(db_user)
             self.session.commit()
+        except NoResultFound:
+            raise UserNotFoundError(user_id=user_id)
+
+    async def update_user_password(self, user_id: UUID, password: str) -> User:
+        try:
+            db_user = self.session.exec(select(User).where(User.id == user_id)).one()
+            db_user.password = password
+            self.session.add(db_user)
+            self.session.commit()
+            self.session.refresh(db_user)
+            logger.info(f"Updated user password: {db_user.username}")
+            return db_user
         except NoResultFound:
             raise UserNotFoundError(user_id=user_id)

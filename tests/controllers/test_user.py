@@ -329,3 +329,36 @@ async def test_delete_user_raise_user_not_found_error(
 
     with pytest.raises(UserNotFoundError):
         await user_controller.delete_user(nonexistent_user_id)
+
+
+@pytest.mark.asyncio
+async def test_update_user_password(
+    user_controller: UserController, faker: Faker
+) -> None:
+    user_create = UserCreate(
+        username=faker.user_name(),
+        email=faker.email(),
+        password=faker.password(),
+        tribe=random.choice(list(Tribe)),
+    )
+    new_user = await user_controller.create_user(user_create)
+
+    new_password = faker.password()
+    updated_user = await user_controller.update_user_password(new_user.id, new_password)
+
+    assert updated_user.id == new_user.id
+    assert updated_user.username == user_create.username
+    assert updated_user.email == user_create.email
+    assert updated_user.tribe == user_create.tribe
+    assert updated_user.password == new_password
+
+
+@pytest.mark.asyncio
+async def test_update_user_password_raise_user_not_found_error(
+    user_controller: UserController, faker: Faker
+) -> None:
+    nonexistent_user_id = faker.uuid4()
+    new_password = faker.password()
+
+    with pytest.raises(UserNotFoundError):
+        await user_controller.update_user_password(nonexistent_user_id, new_password)

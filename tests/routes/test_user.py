@@ -298,3 +298,47 @@ async def test_delete_user_raise_user_not_found_error(
     app.dependency_overrides[get_user_controller] = _mock_delete_user
     delete_user_response = client.delete(f"/users/{_id}")
     assert delete_user_response.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_update_user_password(
+    user_controller: UserController, client: TestClient, app: FastAPI
+) -> None:
+    _id = uuid.uuid4()
+
+    password_date = {"password": "johndoepassword"}
+
+    updated_user = User(
+        id=_id,
+        created_at=datetime(2020, 1, 1),
+        username="JohnDoe",
+        email="john.doe@test.com",
+        tribe=Tribe("Neutrals"),
+        password="johndoepassword",
+    )
+
+    def _mock_update_user_password():
+        user_controller.update_user_password = AsyncMock(return_value=updated_user)
+        return user_controller
+
+    app.dependency_overrides[get_user_controller] = _mock_update_user_password
+    update_user_password_response = client.patch(
+        f"/users/{_id}/password", json=password_date
+    )
+    assert update_user_password_response.status_code == 200
+    assert update_user_password_response.json() == {
+        "id": str(_id),
+        "created_at": updated_user.created_at.isoformat(),
+        "tribe": updated_user.tribe.value,
+        "username": updated_user.username,
+        "email": updated_user.email,
+        "agility": updated_user.agility,
+        "intelligence": updated_user.intelligence,
+        "psycho": updated_user.psycho,
+        "strength": updated_user.strength,
+        "wise": updated_user.wise,
+        "biography": updated_user.biography,
+        "background_image": updated_user.background_image,
+        "profile_picture": updated_user.profile_picture,
+        "experience": updated_user.experience,
+    }

@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends
 
 from leveluplife.controllers.user import UserController
 from leveluplife.dependencies import get_user_controller
-from leveluplife.models.user import UserCreate, UserUpdate
+from leveluplife.models.user import UserCreate, UserUpdate, UserUpdatePassword
 from leveluplife.models.view import UserView
 
 router = APIRouter(
@@ -41,7 +41,7 @@ async def update_user(
     *,
     user_id: UUID,
     user_update: UserUpdate,
-    user_controller: UserController = Depends(get_user_controller)
+    user_controller: UserController = Depends(get_user_controller),
 ) -> UserView:
     return UserView.model_validate(
         await user_controller.update_user(user_id, user_update)
@@ -53,3 +53,17 @@ async def delete_user(
     *, user_id: UUID, user_controller: UserController = Depends(get_user_controller)
 ) -> None:
     await user_controller.delete_user(user_id)
+
+
+@router.patch("/{user_id}/password", response_model=UserView)
+async def update_user_password(
+    *,
+    user_id: UUID,
+    user_update_password: UserUpdatePassword,
+    user_controller: UserController = Depends(get_user_controller),
+) -> UserView:
+    return UserView.model_validate(
+        await user_controller.update_user_password(
+            user_id, user_update_password.password
+        )
+    )
