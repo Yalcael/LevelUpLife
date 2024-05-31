@@ -198,3 +198,71 @@ async def test_get_user_by_id_raise_user_not_found_error(
         "name": "UserNotFoundError",
         "status_code": 404,
     }
+
+
+@pytest.mark.asyncio
+async def test_update_user(
+    client: TestClient, app: FastAPI, user_controller: UserController
+) -> None:
+    _id = uuid.uuid4()
+
+    user_update_data = {
+        "tribe": "Neutrals",
+        "username": "JohnDoe",
+        "email": "john.doe@test.com",
+    }
+
+    updated_user = User(
+        id=_id,
+        created_at=datetime(2020, 1, 1),
+        tribe=Tribe(user_update_data["tribe"]),
+        **{k: v for k, v in user_update_data.items() if k != "tribe"},
+    )
+
+    def _mock_update_user():
+        user_controller.update_user = AsyncMock(return_value=updated_user)
+        return user_controller
+
+    app.dependency_overrides[get_user_controller] = _mock_update_user
+
+    update_user_response = client.patch(f"/users/{_id}", json=user_update_data)
+    assert update_user_response.status_code == 200
+    assert update_user_response.json() == {
+        "id": str(_id),
+        "created_at": updated_user.created_at.isoformat(),
+        "tribe": updated_user.tribe.value,
+        "username": updated_user.username,
+        "email": updated_user.email,
+        "experience": updated_user.experience,
+        "biography": updated_user.biography,
+        "background_image": updated_user.background_image,
+        "profile_picture": updated_user.profile_picture,
+        "agility": updated_user.agility,
+        "intelligence": updated_user.intelligence,
+        "psycho": updated_user.psycho,
+        "strength": updated_user.strength,
+        "wise": updated_user.wise,
+    }
+
+
+@pytest.mark.asyncio
+async def test_update_user_raise_user_not_found_error(
+    user_controller: UserController, client: TestClient, app: FastAPI
+) -> None:
+    _id = uuid.uuid4()
+
+    user_update_data = {
+        "tribe": "Neutrals",
+        "username": "JohnDoe",
+        "email": "john.doe@test.com",
+    }
+
+    def _mock_update_user():
+        user_controller.update_user = AsyncMock(
+            side_effect=UserNotFoundError(user_id=_id)
+        )
+        return user_controller
+
+    app.dependency_overrides[get_user_controller] = _mock_update_user
+    update_user_response = client.patch(f"/users/{_id}", json=user_update_data)
+    assert update_user_response.status_code == 404

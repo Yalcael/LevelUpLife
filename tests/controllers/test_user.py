@@ -6,8 +6,7 @@ from sqlmodel import Session, select
 
 from leveluplife.controllers.user import UserController
 from leveluplife.models.error import UserAlreadyExistsError, UserNotFoundError
-from leveluplife.models.user import UserCreate, Tribe, User
-
+from leveluplife.models.user import UserCreate, Tribe, User, UserUpdate
 
 # Dictionary of expected stats for each tribe
 expected_stats = {
@@ -264,3 +263,43 @@ async def test_get_user_by_id_raise_user_not_found_error(
     non_existent_user_id = faker.uuid4()
     with pytest.raises(UserNotFoundError):
         await user_controller.get_user_by_id(non_existent_user_id)
+
+
+@pytest.mark.asyncio
+async def test_update_user(user_controller: UserController, faker: Faker) -> None:
+    user_create = UserCreate(
+        username=faker.user_name(),
+        email=faker.email(),
+        password=faker.password(),
+        tribe=random.choice(list(Tribe)),
+    )
+    new_user = await user_controller.create_user(user_create)
+
+    user_update = UserUpdate(
+        username=faker.user_name(),
+        email=faker.email(),
+        tribe=random.choice(list(Tribe)),
+    )
+
+    updated_user = await user_controller.update_user(new_user.id, user_update)
+
+    assert updated_user.id == new_user.id
+    assert updated_user.username == user_update.username
+    assert updated_user.email == user_update.email
+    assert updated_user.tribe == user_update.tribe
+
+
+@pytest.mark.asyncio
+async def test_update_user_raise_user_not_found_error(
+    user_controller: UserController, faker: Faker
+) -> None:
+    user_update = UserUpdate(
+        username=faker.user_name(),
+        email=faker.email(),
+        tribe=random.choice(list(Tribe)),
+    )
+
+    nonexistent_user_id = faker.uuid4()
+
+    with pytest.raises(UserNotFoundError):
+        await user_controller.update_user(nonexistent_user_id, user_update)

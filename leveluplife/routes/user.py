@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends
 
 from leveluplife.controllers.user import UserController
 from leveluplife.dependencies import get_user_controller
-from leveluplife.models.user import UserCreate
+from leveluplife.models.user import UserCreate, UserUpdate
 from leveluplife.models.view import UserView
 
 router = APIRouter(
@@ -34,3 +34,15 @@ async def get_user_by_id(
     *, user_id: UUID, user_controller: UserController = Depends(get_user_controller)
 ) -> UserView:
     return UserView.model_validate(await user_controller.get_user_by_id(user_id))
+
+
+@router.patch("/{user_id}", response_model=UserView)
+async def update_user(
+    *,
+    user_id: UUID,
+    user_update: UserUpdate,
+    user_controller: UserController = Depends(get_user_controller)
+) -> UserView:
+    return UserView.model_validate(
+        await user_controller.update_user(user_id, user_update)
+    )

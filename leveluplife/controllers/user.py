@@ -5,7 +5,7 @@ from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlmodel import Session, select
 
 from leveluplife.models.error import UserAlreadyExistsError, UserNotFoundError
-from leveluplife.models.user import UserCreate, User, Tribe
+from leveluplife.models.user import UserCreate, User, Tribe, UserUpdate
 
 
 class UserController:
@@ -73,5 +73,17 @@ class UserController:
     async def get_user_by_id(self, user_id: UUID) -> User:
         try:
             return self.session.exec(select(User).where(User.id == user_id)).one()
+        except NoResultFound:
+            raise UserNotFoundError(user_id=user_id)
+
+    async def update_user(self, user_id: UUID, user_update: UserUpdate) -> User:
+        try:
+            db_user = self.session.exec(select(User).where(User.id == user_id)).one()
+            db_user_data = user_update.model_dump(exclude_unset=True)
+            db_user.sqlmodel_update(db_user_data)
+            self.session.add(db_user)
+            self.session.commit()
+            self.session.refresh(db_user)
+            return db_user
         except NoResultFound:
             raise UserNotFoundError(user_id=user_id)
