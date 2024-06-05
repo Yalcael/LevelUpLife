@@ -1,5 +1,6 @@
 from urllib.request import Request
 from leveluplife.routes.user import router as user_router
+from leveluplife.routes.task import router as task_router
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import JSONResponse
@@ -19,6 +20,7 @@ def create_app(lifespan) -> FastAPI:
     )
 
     app.include_router(user_router)
+    app.include_router(task_router)
 
     @app.exception_handler(BaseError)
     async def exception_handler(request: Request, exc: BaseError) -> JSONResponse:

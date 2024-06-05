@@ -7,6 +7,7 @@ from starlette.testclient import TestClient
 from testcontainers.postgres import PostgresContainer
 
 from leveluplife.api import create_app
+from leveluplife.controllers.task import TaskController
 from leveluplife.controllers.user import UserController
 from main import lifespan
 
@@ -48,6 +49,11 @@ def clear_db(engine):
 @pytest.fixture(name="user_controller")
 def get_user_controller(session: Session) -> UserController:
     return UserController(session)
+
+
+@pytest.fixture(name="task_controller")
+def get_task_controller(session: Session) -> TaskController:
+    return TaskController(session)
 
 
 @pytest.fixture(name="app")

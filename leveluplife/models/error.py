@@ -31,3 +31,15 @@ class UserNotFoundError(BaseError):
         super().__init__(
             name=self.name, message=self.message, status_code=self.status_code
         )
+
+
+class TaskAlreadyExistsError(BaseError):
+    def __init__(
+        self, title: str, status_code: int = 409, name: str = "TaskAlreadyExistsError"
+    ):
+        self.name = name
+        self.message = f"Task with the title {title} already exists."
+        self.status_code = status_code
+        super().__init__(
+            name=self.name, message=self.message, status_code=self.status_code
+        )

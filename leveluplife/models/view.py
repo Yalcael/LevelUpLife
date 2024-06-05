@@ -1,6 +1,7 @@
 from datetime import datetime
 from uuid import UUID
 
+from leveluplife.models.task import TaskBase
 from leveluplife.models.user import UserBase
 
 
@@ -13,3 +14,8 @@ class UserView(UserBase):
     wise: int = 0
     psycho: int = 0
     experience: int = 0
+
+
+class TaskView(TaskBase):
+    id: UUID
+    created_at: datetime
