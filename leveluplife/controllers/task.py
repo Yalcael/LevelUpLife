@@ -1,4 +1,6 @@
-from sqlmodel import Session
+from typing import Sequence
+
+from sqlmodel import Session, select
 from loguru import logger
 from sqlalchemy.exc import IntegrityError
 
@@ -20,3 +22,7 @@ class TaskController:
             return new_task
         except IntegrityError:
             raise TaskAlreadyExistsError(title=task_create.title)
+
+    async def get_tasks(self) -> Sequence[Task]:
+        logger.info("Getting tasks")
+        return self.session.exec(select(Task)).all()

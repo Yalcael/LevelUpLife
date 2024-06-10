@@ -1,3 +1,5 @@
+from typing import Sequence
+
 from fastapi import APIRouter, Depends
 
 from leveluplife.controllers.task import TaskController
@@ -17,3 +19,10 @@ async def create_task(
     task: TaskCreate, task_controller: TaskController = Depends(get_task_controller)
 ) -> TaskView:
     return TaskView.model_validate(await task_controller.create_task(task))
+
+
+@router.get("/", response_model=Sequence[TaskView])
+async def get_tasks(
+    *, task_controller: TaskController = Depends(get_task_controller)
+) -> Sequence[TaskView]:
+    return [TaskView.model_validate(task) for task in await task_controller.get_tasks()]
