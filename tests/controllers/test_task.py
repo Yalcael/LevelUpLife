@@ -1,7 +1,6 @@
 import pytest
 from faker import Faker
 from sqlmodel import Session, select
-
 from leveluplife.controllers.task import TaskController
 from leveluplife.models.error import TaskAlreadyExistsError
 from leveluplife.models.task import TaskCreate, Task
