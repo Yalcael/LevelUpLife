@@ -12,7 +12,7 @@ async def test_create_task(
 ) -> None:
     # Prepare
     task_create = TaskCreate(
-        title=faker.word(),
+        title=faker.unique.word(),
         description=faker.text(max_nb_chars=400),
         completed=faker.boolean(),
         category=faker.word(),
@@ -34,7 +34,7 @@ async def test_create_task_already_exists_error(
     task_controller: TaskController, faker: Faker
 ) -> None:
     task_create = TaskCreate(
-        title=faker.word(),
+        title=faker.unique.word(),
         description=faker.text(max_nb_chars=400),
         completed=faker.boolean(),
         category=faker.word(),
@@ -54,7 +54,7 @@ async def test_get_tasks(task_controller: TaskController, faker: Faker) -> None:
     created_tasks = []
     for _ in range(number_tasks):
         task_create = TaskCreate(
-            title=faker.word(),
+            title=faker.unique.word(),
             description=faker.text(max_nb_chars=400),
             completed=faker.boolean(),
             category=faker.word(),

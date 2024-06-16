@@ -1,11 +1,12 @@
 from typing import Sequence
+from uuid import UUID
 
 from sqlmodel import Session, select
 from loguru import logger
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, NoResultFound
 
-from leveluplife.models.error import TaskAlreadyExistsError
-from leveluplife.models.task import TaskCreate, Task
+from leveluplife.models.error import TaskAlreadyExistsError, TaskNotFoundError
+from leveluplife.models.task import TaskCreate, Task, TaskUpdate
 
 
 class TaskController:
@@ -26,3 +27,31 @@ class TaskController:
     async def get_tasks(self) -> Sequence[Task]:
         logger.info("Getting tasks")
         return self.session.exec(select(Task)).all()
+
+    async def get_task_by_id(self, task_id: UUID) -> Task:
+        try:
+            logger.info("Getting task by id")
+            return self.session.exec(select(Task).where(Task.id == task_id)).one()
+        except NoResultFound:
+            raise TaskNotFoundError(task_id=task_id)
+
+    async def update_task(self, task_id: UUID, task_update: TaskUpdate) -> Task:
+        try:
+            db_task = self.session.exec(select(Task).where(Task.id == task_id)).one()
+            db_task_data = task_update.model_dump(exclude_unset=True)
+            db_task.sqlmodel_update(db_task_data)
+            self.session.add(db_task)
+            self.session.commit()
+            self.session.refresh(db_task)
+            logger.info(f"Updated task: {db_task.title}")
+            return db_task
+        except NoResultFound:
+            raise TaskNotFoundError(task_id=task_id)
+
+    async def delete_task(self, task_id: UUID) -> None:
+        try:
+            db_task = self.session.exec(select(Task).where(Task.id == task_id)).one()
+            self.session.delete(db_task)
+            self.session.commit()
+        except NoResultFound:
+            raise TaskNotFoundError(task_id=task_id)

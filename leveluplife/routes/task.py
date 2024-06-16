@@ -1,10 +1,11 @@
 from typing import Sequence
+from uuid import UUID
 
 from fastapi import APIRouter, Depends
 
 from leveluplife.controllers.task import TaskController
 from leveluplife.dependencies import get_task_controller
-from leveluplife.models.task import TaskCreate
+from leveluplife.models.task import TaskCreate, TaskUpdate
 from leveluplife.models.view import TaskView
 
 router = APIRouter(
@@ -26,3 +27,29 @@ async def get_tasks(
     *, task_controller: TaskController = Depends(get_task_controller)
 ) -> Sequence[TaskView]:
     return [TaskView.model_validate(task) for task in await task_controller.get_tasks()]
+
+
+@router.get("/{task_id}", response_model=TaskView)
+async def get_task_by_id(
+    *, task_id: UUID, task_controller: TaskController = Depends(get_task_controller)
+) -> TaskView:
+    return TaskView.model_validate(await task_controller.get_task_by_id(task_id))
+
+
+@router.patch("/{task_id}", response_model=TaskView)
+async def update_task(
+    *,
+    task_id: UUID,
+    task_update: TaskUpdate,
+    task_controller: TaskController = Depends(get_task_controller),
+) -> TaskView:
+    return TaskView.model_validate(
+        await task_controller.update_task(task_id, task_update)
+    )
+
+
+@router.delete("/{task_id}", status_code=204)
+async def delete_task(
+    *, task_id: UUID, task_controller: TaskController = Depends(get_task_controller)
+) -> None:
+    await task_controller.delete_task(task_id)

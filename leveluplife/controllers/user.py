@@ -4,7 +4,11 @@ from loguru import logger
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlmodel import Session, select
 
-from leveluplife.models.error import UserAlreadyExistsError, UserNotFoundError
+from leveluplife.models.error import (
+    UserNotFoundError,
+    UserEmailAlreadyExistsError,
+    UserUsernameAlreadyExistsError,
+)
 from leveluplife.models.user import UserCreate, User, Tribe, UserUpdate
 
 
@@ -14,16 +18,29 @@ class UserController:
 
     async def create_user(self, user_create: UserCreate) -> User:
         try:
+            # Calculate initial stats based on the tribe
             initial_stats = self.calculate_initial_stats(user_create.tribe)
 
+            # Create new user
             new_user = User(**user_create.dict(), **initial_stats)
             self.session.add(new_user)
             self.session.commit()
             self.session.refresh(new_user)
             logger.info(f"New user created: {new_user.username}")
             return new_user
+
         except IntegrityError:
-            raise UserAlreadyExistsError(email=user_create.email)
+            self.session.rollback()
+            existing_user_by_email = self.session.exec(
+                select(User).where(User.email == user_create.email)
+            ).first()
+            if existing_user_by_email:
+                raise UserEmailAlreadyExistsError(email=user_create.email)
+            existing_user_by_username = self.session.exec(
+                select(User).where(User.username == user_create.username)
+            ).first()
+            if existing_user_by_username:
+                raise UserUsernameAlreadyExistsError(username=user_create.username)
 
     @staticmethod
     def calculate_initial_stats(tribe: Tribe) -> dict[str, int]:

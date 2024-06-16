@@ -8,7 +8,11 @@ from starlette.testclient import TestClient
 
 from leveluplife.controllers.user import UserController
 from leveluplife.dependencies import get_user_controller
-from leveluplife.models.error import UserAlreadyExistsError, UserNotFoundError
+from leveluplife.models.error import (
+    UserNotFoundError,
+    UserEmailAlreadyExistsError,
+    UserUsernameAlreadyExistsError,
+)
 from leveluplife.models.user import User, Tribe
 
 
@@ -58,7 +62,7 @@ async def test_create_user(
 
 
 @pytest.mark.asyncio
-async def test_create_user_raise_user_already_exists_error(
+async def test_create_user_raise_user_email_already_exists_error(
     user_controller: UserController, client: TestClient, app: FastAPI
 ) -> None:
     user_data = {
@@ -70,7 +74,7 @@ async def test_create_user_raise_user_already_exists_error(
 
     def _mock_create_user():
         user_controller.create_user = AsyncMock(
-            side_effect=UserAlreadyExistsError(email=user_data["email"])
+            side_effect=UserEmailAlreadyExistsError(email=user_data["email"])
         )
         return user_controller
 
@@ -79,8 +83,36 @@ async def test_create_user_raise_user_already_exists_error(
     create_user_response = client.post("/users", json=user_data)
     assert create_user_response.status_code == 409
     assert create_user_response.json() == {
-        "name": "UserAlreadyExistsError",
+        "name": "UserEmailAlreadyExistsError",
         "message": f"User with the email {user_data['email']} already exists.",
+        "status_code": 409,
+    }
+
+
+@pytest.mark.asyncio
+async def test_create_user_raise_user_username_already_exists_error(
+    user_controller: UserController, client: TestClient, app: FastAPI
+) -> None:
+    user_data = {
+        "username": "JohnDoe",
+        "email": "john.doe@test.com",
+        "password": "johndoepassword",
+        "tribe": "Nosferati",
+    }
+
+    def _mock_create_user():
+        user_controller.create_user = AsyncMock(
+            side_effect=UserUsernameAlreadyExistsError(username=user_data["username"])
+        )
+        return user_controller
+
+    app.dependency_overrides[get_user_controller] = _mock_create_user
+
+    create_user_response = client.post("/users", json=user_data)
+    assert create_user_response.status_code == 409
+    assert create_user_response.json() == {
+        "name": "UserUsernameAlreadyExistsError",
+        "message": f"User with the username {user_data['username']} already exists.",
         "status_code": 409,
     }
 
