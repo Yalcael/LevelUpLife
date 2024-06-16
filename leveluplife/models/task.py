@@ -26,4 +26,4 @@ class TaskUpdate(DBModel):
     description: str | None = None
     completed: bool | None = None
     category: str | None = None
-    name: str | None = None
+    title: str | None = None

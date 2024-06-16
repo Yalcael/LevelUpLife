@@ -8,7 +8,7 @@ from starlette.testclient import TestClient
 
 from leveluplife.controllers.task import TaskController
 from leveluplife.dependencies import get_task_controller
-from leveluplife.models.error import TaskAlreadyExistsError
+from leveluplife.models.error import TaskAlreadyExistsError, TaskNotFoundError
 from leveluplife.models.task import Task
 
 
@@ -117,3 +117,151 @@ async def test_get_tasks(
         }
         for task in mock_tasks
     ]
+
+
+@pytest.mark.asyncio
+async def test_get_task_by_id(
+    task_controller: TaskController, client: TestClient, app: FastAPI
+) -> None:
+    _id = uuid.uuid4()
+
+    def _mock_get_task_by_id():
+        task_controller.get_task_by_id = AsyncMock(
+            return_value=Task(
+                id=_id,
+                created_at=datetime(2020, 1, 1),
+                title="Supermarket",
+                description="John Doe is going to the supermarket",
+                completed=False,
+                category="Groceries",
+            ),
+        )
+        return task_controller
+
+    app.dependency_overrides[get_task_controller] = _mock_get_task_by_id
+    get_task_by_id_response = client.get(f"/tasks/{_id}")
+    assert get_task_by_id_response.status_code == 200
+    assert get_task_by_id_response.json() == {
+        "id": str(_id),
+        "created_at": "2020-01-01T00:00:00",
+        "title": "Supermarket",
+        "description": "John Doe is going to the supermarket",
+        "completed": False,
+        "category": "Groceries",
+    }
+
+
+@pytest.mark.asyncio
+async def test_get_task_by_id_raise_task_not_found_error(
+    task_controller: TaskController, client: TestClient, app: FastAPI
+) -> None:
+    _id = uuid.uuid4()
+
+    def _mock_get_task_by_id():
+        task_controller.get_task_by_id = AsyncMock(
+            side_effect=TaskNotFoundError(task_id=_id)
+        )
+        return task_controller
+
+    app.dependency_overrides[get_task_controller] = _mock_get_task_by_id
+
+    get_task_by_id_response = client.get(f"/tasks/{_id}")
+    assert get_task_by_id_response.status_code == 404
+    assert get_task_by_id_response.json() == {
+        "message": f"Task with ID {_id} not found",
+        "name": "TaskNotFoundError",
+        "status_code": 404,
+    }
+
+
+@pytest.mark.asyncio
+async def test_update_task(
+    client: TestClient, app: FastAPI, task_controller: TaskController
+) -> None:
+    _id = uuid.uuid4()
+
+    task_update_data = {
+        "title": "Supermarket",
+        "description": "John Doe is going to the supermarket",
+        "completed": False,
+        "category": "Groceries",
+    }
+
+    updated_task = Task(
+        id=_id,
+        created_at=datetime(2020, 1, 1),
+        **task_update_data,
+    )
+
+    def _mock_update_task():
+        task_controller.update_task = AsyncMock(return_value=updated_task)
+        return task_controller
+
+    app.dependency_overrides[get_task_controller] = _mock_update_task
+
+    update_task_response = client.patch(f"/tasks/{_id}", json=task_update_data)
+    assert update_task_response.status_code == 200
+    assert update_task_response.json() == {
+        "id": str(_id),
+        "created_at": updated_task.created_at.isoformat(),
+        "title": updated_task.title,
+        "description": updated_task.description,
+        "completed": updated_task.completed,
+        "category": updated_task.category,
+    }
+
+
+@pytest.mark.asyncio
+async def test_update_task_raise_task_not_found_error(
+    task_controller: TaskController, client: TestClient, app: FastAPI
+) -> None:
+    _id = uuid.uuid4()
+
+    task_update_data = {
+        "title": "Supermarket",
+        "description": "John Doe is going to the supermarket",
+        "completed": False,
+        "category": "Groceries",
+    }
+
+    def _mock_update_task():
+        task_controller.update_task = AsyncMock(
+            side_effect=TaskNotFoundError(task_id=_id)
+        )
+        return task_controller
+
+    app.dependency_overrides[get_task_controller] = _mock_update_task
+    update_task_response = client.patch(f"/tasks/{_id}", json=task_update_data)
+    assert update_task_response.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_delete_task(
+    task_controller: TaskController, client: TestClient, app: FastAPI
+) -> None:
+    _id = uuid.uuid4()
+
+    def _mock_delete_task():
+        task_controller.delete_task = AsyncMock(return_value=None)
+        return task_controller
+
+    app.dependency_overrides[get_task_controller] = _mock_delete_task
+    delete_task_response = client.delete(f"/tasks/{_id}")
+    assert delete_task_response.status_code == 204
+
+
+@pytest.mark.asyncio
+async def test_delete_task_raise_task_not_found_error(
+    task_controller: TaskController, client: TestClient, app: FastAPI
+) -> None:
+    _id = uuid.uuid4()
+
+    def _mock_delete_task():
+        task_controller.delete_task = AsyncMock(
+            side_effect=TaskNotFoundError(task_id=_id)
+        )
+        return task_controller
+
+    app.dependency_overrides[get_task_controller] = _mock_delete_task
+    delete_task_response = client.delete(f"/tasks/{_id}")
+    assert delete_task_response.status_code == 404

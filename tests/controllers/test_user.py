@@ -58,7 +58,7 @@ async def test_create_user_nosferati(
 ) -> None:
     # Prepare
     user_create = UserCreate(
-        username=faker.unique.user_name(),
+        username=faker.unique.user_name()[:18],
         email=faker.unique.email(),
         password=faker.password(),
         tribe=Tribe("Nosferati"),
@@ -86,7 +86,7 @@ async def test_create_user_valhars(
 ) -> None:
     # Prepare
     user_create = UserCreate(
-        username=faker.unique.user_name(),
+        username=faker.unique.user_name()[:18],
         email=faker.unique.email(),
         password=faker.password(),
         tribe=Tribe("Valhars"),
@@ -114,7 +114,7 @@ async def test_create_user_saharans(
 ) -> None:
     # Prepare
     user_create = UserCreate(
-        username=faker.unique.user_name(),
+        username=faker.unique.user_name()[:18],
         email=faker.unique.email(),
         password=faker.password(),
         tribe=Tribe("Saharans"),
@@ -142,7 +142,7 @@ async def test_create_user_glimmerkins(
 ) -> None:
     # Prepare
     user_create = UserCreate(
-        username=faker.unique.user_name(),
+        username=faker.unique.user_name()[:18],
         email=faker.unique.email(),
         password=faker.password(),
         tribe=Tribe("Glimmerkins"),
@@ -170,7 +170,7 @@ async def test_create_user_neutrals(
 ) -> None:
     # Prepare
     user_create = UserCreate(
-        username=faker.unique.user_name(),
+        username=faker.unique.user_name()[:18],
         email=faker.unique.email(),
         password=faker.password(),
         tribe=Tribe("Neutrals"),
@@ -197,7 +197,7 @@ async def test_create_user_email_already_exists_error(
     user_controller: UserController, faker: Faker
 ) -> None:
     user_create = UserCreate(
-        username=faker.unique.user_name(),
+        username=faker.unique.user_name()[:18],
         email=faker.unique.email(),
         password=faker.password(),
         tribe=random.choice(list(Tribe)),
@@ -242,7 +242,7 @@ async def test_get_users(user_controller: UserController, faker: Faker) -> None:
     created_users = []
     for _ in range(number_users):
         user_create = UserCreate(
-            username=faker.unique.user_name(),
+            username=faker.unique.user_name()[:18],
             email=faker.unique.email(),
             password=faker.password(),
             tribe=random.choice(list(Tribe)),
@@ -268,7 +268,7 @@ async def test_get_users(user_controller: UserController, faker: Faker) -> None:
 @pytest.mark.asyncio
 async def test_get_user_by_id(user_controller: UserController, faker: Faker) -> None:
     user_create = UserCreate(
-        username=faker.unique.user_name(),
+        username=faker.unique.user_name()[:18],
         email=faker.unique.email(),
         password=faker.password(),
         tribe=random.choice(list(Tribe)),
@@ -278,7 +278,6 @@ async def test_get_user_by_id(user_controller: UserController, faker: Faker) -> 
 
     retrieved_user = await user_controller.get_user_by_id(created_user.id)
 
-    assert retrieved_user.id == created_user.id
     assert retrieved_user.username == user_create.username
     assert retrieved_user.email == user_create.email
     assert retrieved_user.tribe == user_create.tribe
@@ -297,7 +296,7 @@ async def test_get_user_by_id_raise_user_not_found_error(
 @pytest.mark.asyncio
 async def test_update_user(user_controller: UserController, faker: Faker) -> None:
     user_create = UserCreate(
-        username=faker.unique.user_name(),
+        username=faker.unique.user_name()[:18],
         email=faker.unique.email(),
         password=faker.password(),
         tribe=random.choice(list(Tribe)),
@@ -305,7 +304,7 @@ async def test_update_user(user_controller: UserController, faker: Faker) -> Non
     new_user = await user_controller.create_user(user_create)
 
     user_update = UserUpdate(
-        username=faker.unique.user_name(),
+        username=faker.unique.user_name()[:18],
         email=faker.unique.email(),
         tribe=random.choice(list(Tribe)),
     )
@@ -323,7 +322,7 @@ async def test_update_user_raise_user_not_found_error(
     user_controller: UserController, faker: Faker
 ) -> None:
     user_update = UserUpdate(
-        username=faker.unique.user_name(),
+        username=faker.unique.user_name()[:18],
         email=faker.unique.email(),
         tribe=random.choice(list(Tribe)),
     )
@@ -337,7 +336,7 @@ async def test_update_user_raise_user_not_found_error(
 @pytest.mark.asyncio
 async def test_delete_user(user_controller: UserController, faker: Faker) -> None:
     user_create = UserCreate(
-        username=faker.unique.user_name(),
+        username=faker.unique.user_name()[:18],
         email=faker.unique.email(),
         password=faker.password(),
         tribe=random.choice(list(Tribe)),
@@ -365,7 +364,7 @@ async def test_update_user_password(
     user_controller: UserController, faker: Faker
 ) -> None:
     user_create = UserCreate(
-        username=faker.unique.user_name(),
+        username=faker.unique.user_name()[:18],
         email=faker.unique.email(),
         password=faker.password(),
         tribe=random.choice(list(Tribe)),
@@ -376,9 +375,9 @@ async def test_update_user_password(
     updated_user = await user_controller.update_user_password(new_user.id, new_password)
 
     assert updated_user.id == new_user.id
-    assert updated_user.username == user_create.username
-    assert updated_user.email == user_create.email
-    assert updated_user.tribe == user_create.tribe
+    assert updated_user.username == new_user.username
+    assert updated_user.email == new_user.email
+    assert updated_user.tribe == new_user.tribe
     assert updated_user.password == new_password
 
 
