@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends
 from leveluplife.controllers.task import TaskController
 from leveluplife.dependencies import get_task_controller
 from leveluplife.models.task import TaskCreate, TaskUpdate
-from leveluplife.models.view import TaskView
+from leveluplife.models.view import TaskWithUser
 
 router = APIRouter(
     prefix="/tasks",
@@ -15,35 +15,37 @@ router = APIRouter(
 )
 
 
-@router.post("/", response_model=TaskView, status_code=201)
+@router.post("/", response_model=TaskWithUser, status_code=201)
 async def create_task(
     task: TaskCreate, task_controller: TaskController = Depends(get_task_controller)
-) -> TaskView:
-    return TaskView.model_validate(await task_controller.create_task(task))
+) -> TaskWithUser:
+    return TaskWithUser.model_validate(await task_controller.create_task(task))
 
 
-@router.get("/", response_model=Sequence[TaskView])
+@router.get("/", response_model=Sequence[TaskWithUser])
 async def get_tasks(
     *, task_controller: TaskController = Depends(get_task_controller)
-) -> Sequence[TaskView]:
-    return [TaskView.model_validate(task) for task in await task_controller.get_tasks()]
+) -> Sequence[TaskWithUser]:
+    return [
+        TaskWithUser.model_validate(task) for task in await task_controller.get_tasks()
+    ]
 
 
-@router.get("/{task_id}", response_model=TaskView)
+@router.get("/{task_id}", response_model=TaskWithUser)
 async def get_task_by_id(
     *, task_id: UUID, task_controller: TaskController = Depends(get_task_controller)
-) -> TaskView:
-    return TaskView.model_validate(await task_controller.get_task_by_id(task_id))
+) -> TaskWithUser:
+    return TaskWithUser.model_validate(await task_controller.get_task_by_id(task_id))
 
 
-@router.patch("/{task_id}", response_model=TaskView)
+@router.patch("/{task_id}", response_model=TaskWithUser)
 async def update_task(
     *,
     task_id: UUID,
     task_update: TaskUpdate,
     task_controller: TaskController = Depends(get_task_controller),
-) -> TaskView:
-    return TaskView.model_validate(
+) -> TaskWithUser:
+    return TaskWithUser.model_validate(
         await task_controller.update_task(task_id, task_update)
     )
 

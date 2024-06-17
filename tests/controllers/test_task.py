@@ -2,20 +2,35 @@ import pytest
 from faker import Faker
 from sqlmodel import Session, select
 from leveluplife.controllers.task import TaskController
+from leveluplife.controllers.user import UserController
 from leveluplife.models.error import TaskAlreadyExistsError, TaskNotFoundError
-from leveluplife.models.task import TaskCreate, Task, TaskUpdate
+from leveluplife.models.table import Task
+from leveluplife.models.task import TaskCreate, TaskUpdate
+from leveluplife.models.user import UserCreate, Tribe
 
 
 @pytest.mark.asyncio
 async def test_create_task(
-    task_controller: TaskController, session: Session, faker: Faker
+    task_controller: TaskController,
+    user_controller: UserController,
+    session: Session,
+    faker: Faker,
 ) -> None:
     # Prepare
+    user_create = UserCreate(
+        username=faker.unique.user_name(),
+        email=faker.unique.email(),
+        password=faker.password(),
+        tribe=Tribe.NOSFERATI,
+    )
+    user = await user_controller.create_user(user_create)
+
     task_create = TaskCreate(
         title=faker.unique.word(),
         description=faker.text(max_nb_chars=400),
         completed=faker.boolean(),
         category=faker.word(),
+        user_id=user.id,
     )
     # Act
     result = await task_controller.create_task(task_create)
@@ -27,17 +42,27 @@ async def test_create_task(
     assert result.description == task_create.description == task.description
     assert result.completed == task_create.completed == task.completed
     assert result.category == task_create.category == task.category
+    assert result.user_id == user.id == task.user_id
 
 
 @pytest.mark.asyncio
 async def test_create_task_already_exists_error(
-    task_controller: TaskController, faker: Faker
+    task_controller: TaskController, user_controller: UserController, faker: Faker
 ) -> None:
+    user_create = UserCreate(
+        username=faker.unique.user_name(),
+        email=faker.unique.email(),
+        password=faker.password(),
+        tribe=Tribe.NOSFERATI,
+    )
+    user = await user_controller.create_user(user_create)
+
     task_create = TaskCreate(
         title=faker.unique.word(),
         description=faker.text(max_nb_chars=400),
         completed=faker.boolean(),
         category=faker.word(),
+        user_id=user.id,
     )
 
     # Act
@@ -49,7 +74,17 @@ async def test_create_task_already_exists_error(
 
 
 @pytest.mark.asyncio
-async def test_get_tasks(task_controller: TaskController, faker: Faker) -> None:
+async def test_get_tasks(
+    task_controller: TaskController, user_controller: UserController, faker: Faker
+) -> None:
+    user_create = UserCreate(
+        username=faker.unique.user_name(),
+        email=faker.unique.email(),
+        password=faker.password(),
+        tribe=Tribe.NOSFERATI,
+    )
+    user = await user_controller.create_user(user_create)
+
     number_tasks = 5
     created_tasks = []
     for _ in range(number_tasks):
@@ -58,6 +93,7 @@ async def test_get_tasks(task_controller: TaskController, faker: Faker) -> None:
             description=faker.text(max_nb_chars=400),
             completed=faker.boolean(),
             category=faker.word(),
+            user_id=user.id,
         )
         created_task = await task_controller.create_task(task_create)
         created_tasks.append(created_task)
@@ -71,15 +107,27 @@ async def test_get_tasks(task_controller: TaskController, faker: Faker) -> None:
         assert all_tasks[i].description == created_task.description
         assert all_tasks[i].completed == created_task.completed
         assert all_tasks[i].category == created_task.category
+        assert all_tasks[i].user_id == created_task.user_id
 
 
 @pytest.mark.asyncio
-async def test_get_task_by_id(task_controller: TaskController, faker: Faker) -> None:
+async def test_get_task_by_id(
+    task_controller: TaskController, user_controller: UserController, faker: Faker
+) -> None:
+    user_create = UserCreate(
+        username=faker.unique.user_name(),
+        email=faker.unique.email(),
+        password=faker.password(),
+        tribe=Tribe.NOSFERATI,
+    )
+    user = await user_controller.create_user(user_create)
+
     task_create = TaskCreate(
         title=faker.unique.word(),
         description=faker.text(max_nb_chars=400),
         completed=faker.boolean(),
         category=faker.word(),
+        user_id=user.id,
     )
 
     created_task = await task_controller.create_task(task_create)
@@ -90,6 +138,7 @@ async def test_get_task_by_id(task_controller: TaskController, faker: Faker) -> 
     assert retrieved_task.description == task_create.description
     assert retrieved_task.completed == task_create.completed
     assert retrieved_task.category == task_create.category
+    assert retrieved_task.user_id == user.id
 
 
 @pytest.mark.asyncio
@@ -102,12 +151,23 @@ async def test_get_task_by_id_raise_task_not_found_error(
 
 
 @pytest.mark.asyncio
-async def test_update_task(task_controller: TaskController, faker: Faker) -> None:
+async def test_update_task(
+    task_controller: TaskController, user_controller: UserController, faker: Faker
+) -> None:
+    user_create = UserCreate(
+        username=faker.unique.user_name(),
+        email=faker.unique.email(),
+        password=faker.password(),
+        tribe=Tribe.NOSFERATI,
+    )
+    user = await user_controller.create_user(user_create)
+
     task_create = TaskCreate(
         title=faker.unique.word(),
         description=faker.text(max_nb_chars=400),
         completed=faker.boolean(),
         category=faker.word(),
+        user_id=user.id,
     )
     new_task = await task_controller.create_task(task_create)
 
@@ -125,6 +185,7 @@ async def test_update_task(task_controller: TaskController, faker: Faker) -> Non
     assert updated_task.description == task_update.description
     assert updated_task.completed == task_update.completed
     assert updated_task.category == task_update.category
+    assert updated_task.user_id == user.id
 
 
 @pytest.mark.asyncio
@@ -145,12 +206,23 @@ async def test_update_task_raise_task_not_found_error(
 
 
 @pytest.mark.asyncio
-async def test_delete_task(task_controller: TaskController, faker: Faker) -> None:
+async def test_delete_task(
+    task_controller: TaskController, user_controller: UserController, faker: Faker
+) -> None:
+    user_create = UserCreate(
+        username=faker.unique.user_name(),
+        email=faker.unique.email(),
+        password=faker.password(),
+        tribe=Tribe.NOSFERATI,
+    )
+    user = await user_controller.create_user(user_create)
+
     task_create = TaskCreate(
         title=faker.unique.word(),
         description=faker.text(max_nb_chars=400),
         completed=faker.boolean(),
         category=faker.word(),
+        user_id=user.id,
     )
     new_task = await task_controller.create_task(task_create)
 

@@ -9,7 +9,8 @@ from leveluplife.models.error import (
     UserEmailAlreadyExistsError,
     UserUsernameAlreadyExistsError,
 )
-from leveluplife.models.user import UserCreate, User, Tribe, UserUpdate
+from leveluplife.models.table import User
+from leveluplife.models.user import UserCreate, Tribe, UserUpdate
 
 
 class UserController:

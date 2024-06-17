@@ -1,6 +1,4 @@
-from datetime import datetime
 from enum import Enum
-from uuid import UUID, uuid4
 from pydantic import EmailStr
 from sqlmodel import Field, AutoString
 from leveluplife.models.shared import DBModel
@@ -41,18 +39,6 @@ class UserBase(DBModel):
     biography: str | None = Field(default=None, max_length=500)
     profile_picture: str | None = Field(default=None, max_length=500)
     background_image: str | None = Field(default=None, max_length=500)
-
-
-class User(UserBase, table=True):
-    id: UUID | None = Field(default_factory=uuid4, primary_key=True, unique=True)
-    created_at: datetime = Field(default_factory=lambda: datetime.now())
-    strength: int = 0
-    intelligence: int = 0
-    agility: int = 0
-    wise: int = 0
-    psycho: int = 0
-    experience: int = 0
-    password: str = Field(min_length=4)
 
 
 class UserCreate(UserBase):

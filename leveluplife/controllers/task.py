@@ -6,7 +6,8 @@ from loguru import logger
 from sqlalchemy.exc import IntegrityError, NoResultFound
 
 from leveluplife.models.error import TaskAlreadyExistsError, TaskNotFoundError
-from leveluplife.models.task import TaskCreate, Task, TaskUpdate
+from leveluplife.models.table import Task
+from leveluplife.models.task import TaskCreate, TaskUpdate
 
 
 class TaskController:

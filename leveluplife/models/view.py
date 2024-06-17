@@ -19,3 +19,11 @@ class UserView(UserBase):
 class TaskView(TaskBase):
     id: UUID
     created_at: datetime
+
+
+class UserWithTask(UserView):
+    tasks: list["TaskView"] = []
+
+
+class TaskWithUser(TaskView):
+    user: "UserView"

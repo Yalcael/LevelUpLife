@@ -13,7 +13,8 @@ from leveluplife.models.error import (
     UserEmailAlreadyExistsError,
     UserUsernameAlreadyExistsError,
 )
-from leveluplife.models.user import User, Tribe
+from leveluplife.models.table import User
+from leveluplife.models.user import Tribe
 
 
 @pytest.mark.asyncio
@@ -58,6 +59,7 @@ async def test_create_user(
         "psycho": mock_user.psycho,
         "strength": mock_user.strength,
         "wise": mock_user.wise,
+        "tasks": [],
     }
 
 
@@ -164,6 +166,7 @@ async def test_get_users(
             "psycho": user.psycho,
             "strength": user.strength,
             "wise": user.wise,
+            "tasks": [],
         }
         for user in mock_users
     ]
@@ -206,6 +209,7 @@ async def test_get_user_by_id(
         "psycho": 0,
         "strength": 0,
         "wise": 0,
+        "tasks": [],
     }
 
 
@@ -274,6 +278,7 @@ async def test_update_user(
         "psycho": updated_user.psycho,
         "strength": updated_user.strength,
         "wise": updated_user.wise,
+        "tasks": [],
     }
 
 
@@ -373,4 +378,5 @@ async def test_update_user_password(
         "background_image": updated_user.background_image,
         "profile_picture": updated_user.profile_picture,
         "experience": updated_user.experience,
+        "tasks": [],
     }
