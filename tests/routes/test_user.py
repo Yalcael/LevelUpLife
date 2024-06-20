@@ -12,6 +12,8 @@ from leveluplife.models.error import (
     UserNotFoundError,
     UserEmailAlreadyExistsError,
     UserUsernameAlreadyExistsError,
+    UserUsernameNotFoundError,
+    UserEmailNotFoundError,
 )
 from leveluplife.models.table import User
 from leveluplife.models.user import Tribe
@@ -232,6 +234,142 @@ async def test_get_user_by_id_raise_user_not_found_error(
     assert get_user_by_id_response.json() == {
         "message": f"User with ID {_id} not found",
         "name": "UserNotFoundError",
+        "status_code": 404,
+    }
+
+
+@pytest.mark.asyncio
+async def test_get_user_by_username(
+    user_controller: UserController, client: TestClient, app: FastAPI
+) -> None:
+    _id = uuid.uuid4()
+
+    def _mock_get_user_by_username():
+        user_controller.get_user_by_username = AsyncMock(
+            return_value=User(
+                id=_id,
+                created_at=datetime(2020, 1, 1),
+                tribe=Tribe("Neutrals"),
+                username="JohnDoe",
+                email="john.doe@test.com",
+                password="janedoepassword",
+            ),
+        )
+        return user_controller
+
+    app.dependency_overrides[get_user_controller] = _mock_get_user_by_username
+    get_user_by_username_response = client.get(
+        "/users/type/username?user_username=JohnDoe"
+    )
+    assert get_user_by_username_response.status_code == 200
+    assert get_user_by_username_response.json() == {
+        "id": str(_id),
+        "created_at": "2020-01-01T00:00:00",
+        "tribe": "Neutrals",
+        "username": "JohnDoe",
+        "email": "john.doe@test.com",
+        "experience": 0,
+        "biography": None,
+        "background_image": None,
+        "profile_picture": None,
+        "agility": 0,
+        "intelligence": 0,
+        "psycho": 0,
+        "strength": 0,
+        "wise": 0,
+        "tasks": [],
+    }
+
+
+@pytest.mark.asyncio
+async def test_get_user_by_username_raise_user_username_not_found_error(
+    user_controller: UserController, client: TestClient, app: FastAPI
+) -> None:
+    _id = uuid.uuid4()
+
+    def _mock_get_user_by_username():
+        user_controller.get_user_by_username = AsyncMock(
+            side_effect=UserUsernameNotFoundError(user_username="JohnDoe")
+        )
+        return user_controller
+
+    app.dependency_overrides[get_user_controller] = _mock_get_user_by_username
+
+    get_user_by_username_response = client.get(
+        "/users/type/username?user_username=JohnDoe"
+    )
+    assert get_user_by_username_response.status_code == 404
+    assert get_user_by_username_response.json() == {
+        "message": "User with username JohnDoe not found",
+        "name": "UserUsernameNotFoundError",
+        "status_code": 404,
+    }
+
+
+@pytest.mark.asyncio
+async def test_get_user_by_email(
+    user_controller: UserController, client: TestClient, app: FastAPI
+) -> None:
+    _id = uuid.uuid4()
+
+    def _mock_get_user_by_email():
+        user_controller.get_user_by_email = AsyncMock(
+            return_value=User(
+                id=_id,
+                created_at=datetime(2020, 1, 1),
+                tribe=Tribe("Neutrals"),
+                username="JohnDoe",
+                email="john.doe@test.com",
+                password="janedoepassword",
+            ),
+        )
+        return user_controller
+
+    app.dependency_overrides[get_user_controller] = _mock_get_user_by_email
+    get_user_by_email_response = client.get(
+        "/users/type/email?user_email=john.doe@test.com"
+    )
+    assert get_user_by_email_response.status_code == 200
+    assert get_user_by_email_response.json() == {
+        "id": str(_id),
+        "created_at": "2020-01-01T00:00:00",
+        "tribe": "Neutrals",
+        "username": "JohnDoe",
+        "email": "john.doe@test.com",
+        "experience": 0,
+        "biography": None,
+        "background_image": None,
+        "profile_picture": None,
+        "agility": 0,
+        "intelligence": 0,
+        "psycho": 0,
+        "strength": 0,
+        "wise": 0,
+        "tasks": [],
+    }
+
+
+@pytest.mark.asyncio
+async def test_get_user_by_email_raise_user_email_not_found_error(
+    user_controller: UserController, client: TestClient, app: FastAPI
+) -> None:
+    _id = uuid.uuid4()
+
+    def _mock_get_user_by_email():
+        user_controller.get_user_by_email = AsyncMock(
+            side_effect=UserEmailNotFoundError(user_email="john.doe@test.com")
+        )
+        return user_controller
+
+    app.dependency_overrides[get_user_controller] = _mock_get_user_by_email
+
+    get_user_by_email_response = client.get(
+        "/users/type/email?user_email=john.doe@test.com"
+    )
+    assert get_user_by_email_response.status_code == 404
+    assert get_user_by_email_response.json() == {
+        "message": "User with email john.doe@test.com not found",
+        "name": "UserEmailNotFoundError",
         "status_code": 404,
     }
 

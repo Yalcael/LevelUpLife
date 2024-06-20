@@ -38,6 +38,26 @@ async def get_user_by_id(
     return UserWithTask.model_validate(await user_controller.get_user_by_id(user_id))
 
 
+@router.get("/type/username", response_model=UserWithTask)
+async def get_user_by_username(
+    *,
+    user_username: str,
+    user_controller: UserController = Depends(get_user_controller),
+) -> UserWithTask:
+    return UserWithTask.model_validate(
+        await user_controller.get_user_by_username(user_username)
+    )
+
+
+@router.get("/type/email", response_model=UserWithTask)
+async def get_user_by_email(
+    *, user_email: str, user_controller: UserController = Depends(get_user_controller)
+) -> UserWithTask:
+    return UserWithTask.model_validate(
+        await user_controller.get_user_by_email(user_email)
+    )
+
+
 @router.patch("/{user_id}", response_model=UserWithTask)
 async def update_user(
     *,

@@ -51,6 +51,36 @@ class UserNotFoundError(BaseError):
         )
 
 
+class UserUsernameNotFoundError(BaseError):
+    def __init__(
+        self,
+        user_username: str,
+        status_code: int = 404,
+        name: str = "UserUsernameNotFoundError",
+    ):
+        self.name = name
+        self.message = f"User with username {user_username} not found"
+        self.status_code = status_code
+        super().__init__(
+            name=self.name, message=self.message, status_code=self.status_code
+        )
+
+
+class UserEmailNotFoundError(BaseError):
+    def __init__(
+        self,
+        user_email: str,
+        status_code: int = 404,
+        name: str = "UserEmailNotFoundError",
+    ):
+        self.name = name
+        self.message = f"User with email {user_email} not found"
+        self.status_code = status_code
+        super().__init__(
+            name=self.name, message=self.message, status_code=self.status_code
+        )
+
+
 class TaskAlreadyExistsError(BaseError):
     def __init__(
         self, title: str, status_code: int = 409, name: str = "TaskAlreadyExistsError"
@@ -69,6 +99,21 @@ class TaskNotFoundError(BaseError):
     ):
         self.name = name
         self.message = f"Task with ID {task_id} not found"
+        self.status_code = status_code
+        super().__init__(
+            name=self.name, message=self.message, status_code=self.status_code
+        )
+
+
+class TaskTitleNotFoundError(BaseError):
+    def __init__(
+        self,
+        task_title: str,
+        status_code: int = 404,
+        name: str = "TaskTitleNotFoundError",
+    ):
+        self.name = name
+        self.message = f"Task with title {task_title} not found"
         self.status_code = status_code
         super().__init__(
             name=self.name, message=self.message, status_code=self.status_code

@@ -9,6 +9,8 @@ from leveluplife.models.error import (
     UserNotFoundError,
     UserEmailAlreadyExistsError,
     UserUsernameAlreadyExistsError,
+    UserEmailNotFoundError,
+    UserUsernameNotFoundError,
 )
 from leveluplife.models.table import User
 from leveluplife.models.user import UserCreate, Tribe, UserUpdate
@@ -292,6 +294,64 @@ async def test_get_user_by_id_raise_user_not_found_error(
     non_existent_user_id = faker.uuid4()
     with pytest.raises(UserNotFoundError):
         await user_controller.get_user_by_id(non_existent_user_id)
+
+
+@pytest.mark.asyncio
+async def test_get_user_by_username(
+    user_controller: UserController, faker: Faker
+) -> None:
+    user_create = UserCreate(
+        username=faker.unique.user_name()[:18],
+        email=faker.unique.email(),
+        password=faker.password(),
+        tribe=random.choice(list(Tribe)),
+    )
+
+    created_user = await user_controller.create_user(user_create)
+
+    retrieved_user = await user_controller.get_user_by_username(created_user.username)
+
+    assert retrieved_user.username == user_create.username
+    assert retrieved_user.email == user_create.email
+    assert retrieved_user.tribe == user_create.tribe
+    assert retrieved_user.password == user_create.password
+
+
+@pytest.mark.asyncio
+async def test_get_user_by_username_raise_user_username_not_found_error(
+    user_controller: UserController, faker: Faker
+) -> None:
+    non_existent_user_username = faker.unique.user_name()
+    with pytest.raises(UserUsernameNotFoundError):
+        await user_controller.get_user_by_username(non_existent_user_username)
+
+
+@pytest.mark.asyncio
+async def test_get_user_by_email(user_controller: UserController, faker: Faker) -> None:
+    user_create = UserCreate(
+        username=faker.unique.user_name()[:18],
+        email=faker.unique.email(),
+        password=faker.password(),
+        tribe=random.choice(list(Tribe)),
+    )
+
+    created_user = await user_controller.create_user(user_create)
+
+    retrieved_user = await user_controller.get_user_by_email(created_user.email)
+
+    assert retrieved_user.username == user_create.username
+    assert retrieved_user.email == user_create.email
+    assert retrieved_user.tribe == user_create.tribe
+    assert retrieved_user.password == user_create.password
+
+
+@pytest.mark.asyncio
+async def test_get_user_by_email_raise_user_email_not_found_error(
+    user_controller: UserController, faker: Faker
+) -> None:
+    non_existent_user_email = faker.unique.email()
+    with pytest.raises(UserEmailNotFoundError):
+        await user_controller.get_user_by_email(non_existent_user_email)
 
 
 @pytest.mark.asyncio

@@ -3,7 +3,11 @@ from faker import Faker
 from sqlmodel import Session, select
 from leveluplife.controllers.task import TaskController
 from leveluplife.controllers.user import UserController
-from leveluplife.models.error import TaskAlreadyExistsError, TaskNotFoundError
+from leveluplife.models.error import (
+    TaskAlreadyExistsError,
+    TaskNotFoundError,
+    TaskTitleNotFoundError,
+)
 from leveluplife.models.table import Task
 from leveluplife.models.task import TaskCreate, TaskUpdate
 from leveluplife.models.user import UserCreate, Tribe
@@ -148,6 +152,46 @@ async def test_get_task_by_id_raise_task_not_found_error(
     non_existent_task_id = faker.uuid4()
     with pytest.raises(TaskNotFoundError):
         await task_controller.get_task_by_id(non_existent_task_id)
+
+
+@pytest.mark.asyncio
+async def test_get_task_by_title(
+    task_controller: TaskController, user_controller: UserController, faker: Faker
+) -> None:
+    user_create = UserCreate(
+        username=faker.unique.user_name(),
+        email=faker.unique.email(),
+        password=faker.password(),
+        tribe=Tribe.NOSFERATI,
+    )
+    user = await user_controller.create_user(user_create)
+
+    task_create = TaskCreate(
+        title=faker.unique.word(),
+        description=faker.text(max_nb_chars=400),
+        completed=faker.boolean(),
+        category=faker.word(),
+        user_id=user.id,
+    )
+
+    created_task = await task_controller.create_task(task_create)
+
+    retrieved_task = await task_controller.get_task_by_title(created_task.title)
+
+    assert retrieved_task.title == task_create.title
+    assert retrieved_task.description == task_create.description
+    assert retrieved_task.completed == task_create.completed
+    assert retrieved_task.category == task_create.category
+    assert retrieved_task.user_id == user.id
+
+
+@pytest.mark.asyncio
+async def test_get_task_by_title_raise_task_title_not_found_error(
+    task_controller: TaskController, faker: Faker
+) -> None:
+    non_existent_task_title = faker.text()
+    with pytest.raises(TaskTitleNotFoundError):
+        await task_controller.get_task_by_title(non_existent_task_title)
 
 
 @pytest.mark.asyncio

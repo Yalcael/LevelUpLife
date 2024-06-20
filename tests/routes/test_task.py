@@ -8,7 +8,11 @@ from starlette.testclient import TestClient
 
 from leveluplife.controllers.task import TaskController
 from leveluplife.dependencies import get_task_controller
-from leveluplife.models.error import TaskAlreadyExistsError, TaskNotFoundError
+from leveluplife.models.error import (
+    TaskAlreadyExistsError,
+    TaskNotFoundError,
+    TaskTitleNotFoundError,
+)
 from leveluplife.models.table import Task, User
 from leveluplife.models.user import Tribe
 
@@ -273,6 +277,94 @@ async def test_get_task_by_id_raise_task_not_found_error(
     assert get_task_by_id_response.json() == {
         "message": f"Task with ID {_id} not found",
         "name": "TaskNotFoundError",
+        "status_code": 404,
+    }
+
+
+@pytest.mark.asyncio
+async def test_get_task_by_title(
+    task_controller: TaskController, client: TestClient, app: FastAPI
+) -> None:
+    mock_user = User(
+        id=uuid.uuid4(),
+        username="test_user",
+        email="test@gmail.com",
+        tribe=Tribe.NEUTRALS,
+        created_at=datetime(2020, 1, 1),
+        strength=5,
+        intelligence=5,
+        agility=5,
+        wise=5,
+        psycho=5,
+        experience=0,
+    )
+
+    _id = uuid.uuid4()
+
+    def _mock_get_task_by_title():
+        task_controller.get_task_by_title = AsyncMock(
+            return_value=Task(
+                id=_id,
+                created_at=datetime(2020, 1, 1),
+                title="Supermarket",
+                description="John Doe is going to the supermarket",
+                completed=False,
+                category="Groceries",
+                user_id=mock_user.id,
+                user=mock_user,
+            ),
+        )
+        return task_controller
+
+    app.dependency_overrides[get_task_controller] = _mock_get_task_by_title
+    get_task_by_title_response = client.get("/tasks/type/title?task_title=Supermarket")
+    assert get_task_by_title_response.status_code == 200
+    assert get_task_by_title_response.json() == {
+        "id": str(_id),
+        "created_at": "2020-01-01T00:00:00",
+        "title": "Supermarket",
+        "description": "John Doe is going to the supermarket",
+        "completed": False,
+        "category": "Groceries",
+        "user_id": str(mock_user.id),
+        "user": {
+            "id": str(mock_user.id),
+            "created_at": mock_user.created_at.isoformat(),
+            "username": mock_user.username,
+            "email": mock_user.email,
+            "tribe": mock_user.tribe,
+            "strength": mock_user.strength,
+            "intelligence": mock_user.intelligence,
+            "agility": mock_user.agility,
+            "wise": mock_user.wise,
+            "psycho": mock_user.psycho,
+            "experience": mock_user.experience,
+            "biography": mock_user.biography,
+            "profile_picture": mock_user.profile_picture,
+            "background_image": mock_user.background_image,
+        },
+    }
+
+
+@pytest.mark.asyncio
+async def test_get_task_by_title_raise_task_title_not_found_error(
+    task_controller: TaskController, client: TestClient, app: FastAPI
+) -> None:
+    _id = uuid.uuid4()
+
+    def _mock_get_task_by_title():
+        task_controller.get_task_by_title = AsyncMock(
+            side_effect=TaskTitleNotFoundError(task_title="Supermarket")
+        )
+        return task_controller
+
+    app.dependency_overrides[get_task_controller] = _mock_get_task_by_title
+
+    get_task_by_id_response = client.get("/tasks/type/title?task_title=Supermarket")
+    assert get_task_by_id_response.status_code == 404
+    assert get_task_by_id_response.json() == {
+        "message": "Task with title Supermarket not found",
+        "name": "TaskTitleNotFoundError",
         "status_code": 404,
     }
 

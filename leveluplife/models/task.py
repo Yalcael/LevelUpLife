@@ -6,7 +6,7 @@ from leveluplife.models.shared import DBModel
 
 
 class TaskBase(DBModel):
-    title: str = Field(default=None, max_length=69, index=True, unique=True)
+    title: str = Field(default=None, max_length=80, index=True, unique=True)
     description: str = Field(max_length=400)
     completed: bool
     category: str

@@ -38,6 +38,15 @@ async def get_task_by_id(
     return TaskWithUser.model_validate(await task_controller.get_task_by_id(task_id))
 
 
+@router.get("/type/title", response_model=TaskWithUser)
+async def get_task_by_title(
+    *, task_title: str, task_controller: TaskController = Depends(get_task_controller)
+) -> TaskWithUser:
+    return TaskWithUser.model_validate(
+        await task_controller.get_task_by_title(task_title)
+    )
+
+
 @router.patch("/{task_id}", response_model=TaskWithUser)
 async def update_task(
     *,

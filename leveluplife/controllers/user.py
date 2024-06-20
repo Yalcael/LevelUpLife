@@ -8,6 +8,8 @@ from leveluplife.models.error import (
     UserNotFoundError,
     UserEmailAlreadyExistsError,
     UserUsernameAlreadyExistsError,
+    UserUsernameNotFoundError,
+    UserEmailNotFoundError,
 )
 from leveluplife.models.table import User
 from leveluplife.models.user import UserCreate, Tribe, UserUpdate
@@ -92,10 +94,26 @@ class UserController:
 
     async def get_user_by_id(self, user_id: UUID) -> User:
         try:
-            logger.info("Getting user by id")
+            logger.info(f"Getting user by id: {user_id}")
             return self.session.exec(select(User).where(User.id == user_id)).one()
         except NoResultFound:
             raise UserNotFoundError(user_id=user_id)
+
+    async def get_user_by_username(self, user_username: str) -> User:
+        try:
+            logger.info(f"Getting user by username: {user_username}")
+            return self.session.exec(
+                select(User).where(User.username == user_username)
+            ).one()
+        except NoResultFound:
+            raise UserUsernameNotFoundError(user_username=user_username)
+
+    async def get_user_by_email(self, user_email: str) -> User:
+        try:
+            logger.info(f"Getting user by email: {user_email}")
+            return self.session.exec(select(User).where(User.email == user_email)).one()
+        except NoResultFound:
+            raise UserEmailNotFoundError(user_email=user_email)
 
     async def update_user(self, user_id: UUID, user_update: UserUpdate) -> User:
         try:
@@ -115,6 +133,7 @@ class UserController:
             db_user = self.session.exec(select(User).where(User.id == user_id)).one()
             self.session.delete(db_user)
             self.session.commit()
+            logger.info(f"Deleted user: {db_user.username}")
         except NoResultFound:
             raise UserNotFoundError(user_id=user_id)
 
