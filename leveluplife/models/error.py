@@ -118,3 +118,42 @@ class TaskTitleNotFoundError(BaseError):
         super().__init__(
             name=self.name, message=self.message, status_code=self.status_code
         )
+
+
+class ItemAlreadyExistsError(BaseError):
+    def __init__(
+        self, _name: str, status_code: int = 409, name: str = "ItemAlreadyExistsError"
+    ):
+        self.name = name
+        self.message = f"Item with the name {_name} already exists."
+        self.status_code = status_code
+        super().__init__(
+            name=self.name, message=self.message, status_code=self.status_code
+        )
+
+
+class ItemNotFoundError(BaseError):
+    def __init__(
+        self, item_id: UUID, status_code: int = 404, name: str = "ItemNotFoundError"
+    ):
+        self.name = name
+        self.message = f"Item with ID {item_id} not found"
+        self.status_code = status_code
+        super().__init__(
+            name=self.name, message=self.message, status_code=self.status_code
+        )
+
+
+class ItemNameNotFoundError(BaseError):
+    def __init__(
+        self,
+        item_name: str,
+        status_code: int = 404,
+        name: str = "ItemNameNotFoundError",
+    ):
+        self.name = name
+        self.message = f"Item with name {item_name} not found"
+        self.status_code = status_code
+        super().__init__(
+            name=self.name, message=self.message, status_code=self.status_code
+        )
