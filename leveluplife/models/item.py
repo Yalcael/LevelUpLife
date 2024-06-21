@@ -9,11 +9,11 @@ class ItemBase(DBModel):
     name: str = Field(unique=True, index=True)
     description: str = Field(max_length=300)
     price_sell: int
-    strength: int | None
-    intelligence: int | None
-    agility: int | None
-    wise: int | None
-    psycho: int | None
+    strength: int = 0
+    intelligence: int = 0
+    agility: int = 0
+    wise: int = 0
+    psycho: int = 0
 
 
 class Item(ItemBase):
