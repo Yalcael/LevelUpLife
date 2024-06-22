@@ -81,6 +81,21 @@ class UserEmailNotFoundError(BaseError):
         )
 
 
+class TribeNotFoundError(BaseError):
+    def __init__(
+        self,
+        tribe: str,
+        status_code: int = 404,
+        name: str = "TribeNotFoundError",
+    ):
+        self.name = name
+        self.message = f"Tribe with the name {tribe} not found"
+        self.status_code = status_code
+        super().__init__(
+            name=self.name, message=self.message, status_code=self.status_code
+        )
+
+
 class TaskAlreadyExistsError(BaseError):
     def __init__(
         self, title: str, status_code: int = 409, name: str = "TaskAlreadyExistsError"

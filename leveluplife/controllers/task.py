@@ -29,9 +29,9 @@ class TaskController:
         except IntegrityError:
             raise TaskAlreadyExistsError(title=task_create.title)
 
-    async def get_tasks(self) -> Sequence[Task]:
+    async def get_tasks(self, offset: int, limit: int) -> Sequence[Task]:
         logger.info("Getting tasks")
-        return self.session.exec(select(Task)).all()
+        return self.session.exec(select(Task).offset(offset).limit(limit)).all()
 
     async def get_task_by_id(self, task_id: UUID) -> Task:
         try:

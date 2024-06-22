@@ -103,7 +103,7 @@ async def test_get_tasks(
         created_task = await task_controller.create_task(task_create)
         created_tasks.append(created_task)
 
-    all_tasks = await task_controller.get_tasks()
+    all_tasks = await task_controller.get_tasks(offset=0 * 20, limit=20)
 
     assert len(all_tasks) == number_tasks
 

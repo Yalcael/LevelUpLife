@@ -24,10 +24,11 @@ async def create_user(
 
 @router.get("/", response_model=Sequence[UserWithTask])
 async def get_users(
-    *, user_controller: UserController = Depends(get_user_controller)
+    *, offset: int = 0, user_controller: UserController = Depends(get_user_controller)
 ) -> Sequence[UserWithTask]:
     return [
-        UserWithTask.model_validate(user) for user in await user_controller.get_users()
+        UserWithTask.model_validate(user)
+        for user in await user_controller.get_users(offset * 20, 20)
     ]
 
 
@@ -56,6 +57,17 @@ async def get_user_by_email(
     return UserWithTask.model_validate(
         await user_controller.get_user_by_email(user_email)
     )
+
+
+@router.get("/type/tribe", response_model=Sequence[UserWithTask])
+async def get_users_by_tribe(
+    *,
+    offset: int = 0,
+    user_tribe: str,
+    user_controller: UserController = Depends(get_user_controller),
+) -> Sequence[UserWithTask]:
+    users = await user_controller.get_users_by_tribe(user_tribe, offset * 20, 20)
+    return [UserWithTask.model_validate(user) for user in users]
 
 
 @router.patch("/{user_id}", response_model=UserWithTask)

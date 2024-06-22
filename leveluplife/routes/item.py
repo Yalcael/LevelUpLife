@@ -43,6 +43,23 @@ async def delete_item(
 
 @router.get("/", response_model=Sequence[ItemView])
 async def get_items(
-    *, item_controller: ItemController = Depends(get_item_controller)
+    *, offset: int = 0, item_controller: ItemController = Depends(get_item_controller)
 ) -> Sequence[ItemView]:
-    return [ItemView.model_validate(item) for item in await item_controller.get_items()]
+    return [
+        ItemView.model_validate(item)
+        for item in await item_controller.get_items(offset * 20, 20)
+    ]
+
+
+@router.get("/{item_id}", response_model=ItemView)
+async def get_item_by_id(
+    *, item_id: UUID, item_controller: ItemController = Depends(get_item_controller)
+) -> ItemView:
+    return ItemView.model_validate(await item_controller.get_item_by_id(item_id))
+
+
+@router.get("/type/name", response_model=ItemView)
+async def get_item_by_name(
+    *, item_name: str, item_controller: ItemController = Depends(get_item_controller)
+) -> ItemView:
+    return ItemView.model_validate(await item_controller.get_item_by_name(item_name))

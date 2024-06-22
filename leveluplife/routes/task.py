@@ -24,10 +24,11 @@ async def create_task(
 
 @router.get("/", response_model=Sequence[TaskWithUser])
 async def get_tasks(
-    *, task_controller: TaskController = Depends(get_task_controller)
+    *, offset: int = 0, task_controller: TaskController = Depends(get_task_controller)
 ) -> Sequence[TaskWithUser]:
     return [
-        TaskWithUser.model_validate(task) for task in await task_controller.get_tasks()
+        TaskWithUser.model_validate(task)
+        for task in await task_controller.get_tasks(offset * 20, 20)
     ]
 
 

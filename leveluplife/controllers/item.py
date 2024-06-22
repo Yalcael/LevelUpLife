@@ -6,7 +6,11 @@ from loguru import logger
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlmodel import Session, select
 
-from leveluplife.models.error import ItemAlreadyExistsError, ItemNotFoundError
+from leveluplife.models.error import (
+    ItemAlreadyExistsError,
+    ItemNameNotFoundError,
+    ItemNotFoundError,
+)
 from leveluplife.models.item import Item, ItemCreate, ItemUpdate
 
 
@@ -49,6 +53,20 @@ class ItemController:
         except NoResultFound:
             raise ItemNotFoundError(item_id=item_id)
 
-    async def get_items(self) -> Sequence[Item]:
+    async def get_items(self, offset: int, limit: int) -> Sequence[Item]:
         logger.info("Getting items")
-        return self.session.exec(select(Item)).all()
+        return self.session.exec(select(Item).offset(offset).limit(limit)).all()
+
+    async def get_item_by_id(self, item_id: UUID) -> Item:
+        try:
+            logger.info(f"Getting item by id: {item_id}")
+            return self.session.exec(select(Item).where(Item.id == item_id)).one()
+        except NoResultFound:
+            raise ItemNotFoundError(item_id=item_id)
+
+    async def get_item_by_name(self, item_name: str) -> Item:
+        try:
+            logger.info(f"Getting item by name: {item_name}")
+            return self.session.exec(select(Item).where(Item.name == item_name)).one()
+        except NoResultFound:
+            raise ItemNameNotFoundError(item_name=item_name)

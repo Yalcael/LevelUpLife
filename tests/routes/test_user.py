@@ -9,6 +9,7 @@ from starlette.testclient import TestClient
 from leveluplife.controllers.user import UserController
 from leveluplife.dependencies import get_user_controller
 from leveluplife.models.error import (
+    TribeNotFoundError,
     UserEmailAlreadyExistsError,
     UserEmailNotFoundError,
     UserNotFoundError,
@@ -370,6 +371,91 @@ async def test_get_user_by_email_raise_user_email_not_found_error(
     assert get_user_by_email_response.json() == {
         "message": "User with email john.doe@test.com not found",
         "name": "UserEmailNotFoundError",
+        "status_code": 404,
+    }
+
+
+@pytest.mark.asyncio
+async def test_get_users_by_tribe(
+    client: TestClient, user_controller: UserController, app: FastAPI
+) -> None:
+    mock_users = [
+        User(
+            id=uuid.uuid4(),
+            created_at=datetime(2020, 1, 1),
+            tribe=Tribe.NOSFERATI,
+            username="JohnDoe",
+            email="john.doe@test.com",
+            password="johndoepassword",
+        ),
+        User(
+            id=uuid.uuid4(),
+            created_at=datetime(2022, 2, 2),
+            tribe=Tribe.NOSFERATI,
+            username="JaneDoe",
+            email="jane.doe@test.com",
+            password="janedoepassword",
+        ),
+        User(
+            id=uuid.uuid4(),
+            created_at=datetime(2021, 3, 3),
+            tribe=Tribe.SAHARANS,
+            username="JimDoe",
+            email="jim.doe@test.com",
+            password="jimdoepassword",
+        ),
+    ]
+
+    def _mock_get_users_by_tribe():
+        user_controller.get_users_by_tribe = AsyncMock(
+            return_value=[user for user in mock_users if user.tribe == Tribe.NOSFERATI]
+        )
+        return user_controller
+
+    app.dependency_overrides[get_user_controller] = _mock_get_users_by_tribe
+
+    response = client.get("/users/type/tribe?user_tribe=Nosferati")
+    assert response.status_code == 200
+    assert response.json() == [
+        {
+            "id": str(user.id),
+            "created_at": user.created_at.isoformat(),
+            "tribe": user.tribe.value,
+            "username": user.username,
+            "email": user.email,
+            "experience": user.experience,
+            "biography": user.biography,
+            "background_image": user.background_image,
+            "profile_picture": user.profile_picture,
+            "agility": user.agility,
+            "intelligence": user.intelligence,
+            "psycho": user.psycho,
+            "strength": user.strength,
+            "wise": user.wise,
+            "tasks": [],
+        }
+        for user in mock_users
+        if user.tribe == Tribe.NOSFERATI
+    ]
+
+
+@pytest.mark.asyncio
+async def test_get_users_by_tribe_raise_tribe_not_found_error(
+    client: TestClient, user_controller: UserController, app: FastAPI
+) -> None:
+    def _mock_get_users_by_tribe():
+        user_controller.get_users_by_tribe = AsyncMock(
+            side_effect=TribeNotFoundError(tribe="NonExistingTribe")
+        )
+        return user_controller
+
+    app.dependency_overrides[get_user_controller] = _mock_get_users_by_tribe
+
+    response = client.get("/users/type/tribe?user_tribe=NonExistingTribe")
+    assert response.status_code == 404
+    assert response.json() == {
+        "message": "Tribe with the name NonExistingTribe not found",
+        "name": "TribeNotFoundError",
         "status_code": 404,
     }
 

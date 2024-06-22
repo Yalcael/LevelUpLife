@@ -6,6 +6,7 @@ from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlmodel import Session, select
 
 from leveluplife.models.error import (
+    TribeNotFoundError,
     UserEmailAlreadyExistsError,
     UserEmailNotFoundError,
     UserNotFoundError,
@@ -89,9 +90,9 @@ class UserController:
                 "psycho": 5,
             }
 
-    async def get_users(self) -> Sequence[User]:
+    async def get_users(self, offset: int, limit: int) -> Sequence[User]:
         logger.info("Getting users")
-        return self.session.exec(select(User)).all()
+        return self.session.exec(select(User).offset(offset).limit(limit)).all()
 
     async def get_user_by_id(self, user_id: UUID) -> User:
         try:
@@ -115,6 +116,23 @@ class UserController:
             return self.session.exec(select(User).where(User.email == user_email)).one()
         except NoResultFound:
             raise UserEmailNotFoundError(user_email=user_email)
+
+    async def get_users_by_tribe(
+        self, user_tribe: str, offset: int, limit: int
+    ) -> Sequence[User]:
+        try:
+            # Validate the user_tribe input against the Tribe Enum
+            user_tribe_enum = Tribe(user_tribe)
+        except ValueError:
+            raise TribeNotFoundError(tribe=user_tribe)
+        logger.info(f"Getting user by tribe: {user_tribe_enum}")
+        users = self.session.exec(
+            select(User)
+            .offset(offset)
+            .limit(limit)
+            .where(User.tribe == user_tribe_enum)
+        ).all()
+        return users
 
     async def update_user(self, user_id: UUID, user_update: UserUpdate) -> User:
         try:
