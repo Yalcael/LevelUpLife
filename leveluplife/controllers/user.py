@@ -1,18 +1,19 @@
 from typing import Sequence
 from uuid import UUID
+
 from loguru import logger
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlmodel import Session, select
 
 from leveluplife.models.error import (
-    UserNotFoundError,
     UserEmailAlreadyExistsError,
+    UserEmailNotFoundError,
+    UserNotFoundError,
     UserUsernameAlreadyExistsError,
     UserUsernameNotFoundError,
-    UserEmailNotFoundError,
 )
 from leveluplife.models.table import User
-from leveluplife.models.user import UserCreate, Tribe, UserUpdate
+from leveluplife.models.user import Tribe, UserCreate, UserUpdate
 
 
 class UserController:

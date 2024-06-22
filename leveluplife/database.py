@@ -1,5 +1,6 @@
-from sqlalchemy import create_engine, Engine
+from sqlalchemy import Engine, create_engine
 from sqlmodel import SQLModel
+
 from leveluplife.settings import Settings
 
 

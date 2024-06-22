@@ -1,0 +1,48 @@
+from typing import Sequence
+from uuid import UUID
+
+from fastapi import APIRouter, Depends
+
+from leveluplife.controllers.item import ItemController
+from leveluplife.dependencies import get_item_controller
+from leveluplife.models.item import ItemCreate, ItemUpdate
+from leveluplife.models.view import ItemView
+
+router = APIRouter(
+    prefix="/items",
+    tags=["items"],
+    responses={404: {"description": "Not found"}},
+)
+
+
+@router.post("/", response_model=ItemView, status_code=201)
+async def create_item(
+    item: ItemCreate, item_controller: ItemController = Depends(get_item_controller)
+) -> ItemView:
+    return ItemView.model_validate(await item_controller.create_item(item))
+
+
+@router.patch("/{item_id}", response_model=ItemView)
+async def update_item(
+    *,
+    item_id: UUID,
+    item_update: ItemUpdate,
+    item_controller: ItemController = Depends(get_item_controller),
+) -> ItemView:
+    return ItemView.model_validate(
+        await item_controller.update_item(item_id, item_update)
+    )
+
+
+@router.delete("/{item_id}", status_code=204)
+async def delete_item(
+    *, item_id: UUID, item_controller: ItemController = Depends(get_item_controller)
+) -> None:
+    await item_controller.delete_item(item_id)
+
+
+@router.get("/", response_model=Sequence[ItemView])
+async def get_items(
+    *, item_controller: ItemController = Depends(get_item_controller)
+) -> Sequence[ItemView]:
+    return [ItemView.model_validate(item) for item in await item_controller.get_items()]

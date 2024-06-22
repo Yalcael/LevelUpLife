@@ -1,6 +1,8 @@
 from enum import Enum
+
 from pydantic import EmailStr
-from sqlmodel import Field, AutoString
+from sqlmodel import AutoString, Field
+
 from leveluplife.models.shared import DBModel
 
 

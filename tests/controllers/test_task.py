@@ -1,6 +1,7 @@
 import pytest
 from faker import Faker
 from sqlmodel import Session, select
+
 from leveluplife.controllers.task import TaskController
 from leveluplife.controllers.user import UserController
 from leveluplife.models.error import (
@@ -10,7 +11,7 @@ from leveluplife.models.error import (
 )
 from leveluplife.models.table import Task
 from leveluplife.models.task import TaskCreate, TaskUpdate
-from leveluplife.models.user import UserCreate, Tribe
+from leveluplife.models.user import Tribe, UserCreate
 
 
 @pytest.mark.asyncio

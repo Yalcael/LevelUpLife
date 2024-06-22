@@ -1,9 +1,9 @@
 from typing import Sequence
 from uuid import UUID
 
-from sqlmodel import Session, select
 from loguru import logger
 from sqlalchemy.exc import IntegrityError, NoResultFound
+from sqlmodel import Session, select
 
 from leveluplife.models.error import (
     TaskAlreadyExistsError,

@@ -24,6 +24,9 @@ class TaskView(TaskBase):
 
 class ItemView(ItemBase):
     id: UUID
+    created_at: datetime
+    updated_at: datetime | None = None
+    deleted_at: datetime | None = None
 
 
 class UserWithTask(UserView):

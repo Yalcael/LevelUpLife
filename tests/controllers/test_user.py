@@ -6,14 +6,14 @@ from sqlmodel import Session, select
 
 from leveluplife.controllers.user import UserController
 from leveluplife.models.error import (
-    UserNotFoundError,
     UserEmailAlreadyExistsError,
-    UserUsernameAlreadyExistsError,
     UserEmailNotFoundError,
+    UserNotFoundError,
+    UserUsernameAlreadyExistsError,
     UserUsernameNotFoundError,
 )
 from leveluplife.models.table import User
-from leveluplife.models.user import UserCreate, Tribe, UserUpdate
+from leveluplife.models.user import Tribe, UserCreate, UserUpdate
 
 # Dictionary of expected stats for each tribe
 expected_stats = {

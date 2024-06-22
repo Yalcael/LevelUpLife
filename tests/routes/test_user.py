@@ -9,11 +9,11 @@ from starlette.testclient import TestClient
 from leveluplife.controllers.user import UserController
 from leveluplife.dependencies import get_user_controller
 from leveluplife.models.error import (
-    UserNotFoundError,
     UserEmailAlreadyExistsError,
+    UserEmailNotFoundError,
+    UserNotFoundError,
     UserUsernameAlreadyExistsError,
     UserUsernameNotFoundError,
-    UserEmailNotFoundError,
 )
 from leveluplife.models.table import User
 from leveluplife.models.user import Tribe

@@ -1,4 +1,5 @@
 import pytest
+
 from leveluplife.models.user import Tribe
 
 
