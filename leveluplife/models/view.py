@@ -29,7 +29,7 @@ class ItemView(ItemBase):
     created_at: datetime
     updated_at: datetime | None = None
     deleted_at: datetime | None = None
-    items: list["User"] = []
+    users: list["User"] = []
 
 
 class UserWithTask(UserView):
