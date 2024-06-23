@@ -11,7 +11,8 @@ from leveluplife.models.error import (
     ItemNameNotFoundError,
     ItemNotFoundError,
 )
-from leveluplife.models.item import Item, ItemCreate, ItemUpdate
+from leveluplife.models.item import ItemCreate, ItemUpdate
+from leveluplife.models.table import Item
 
 
 class ItemController:
