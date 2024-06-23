@@ -50,6 +50,7 @@ async def test_create_user(
     assert actual_response == {
         "id": str(mock_user.id),
         "created_at": mock_user.created_at.isoformat(),
+        "items": [],
         "username": mock_user.username,
         "email": mock_user.email,
         "tribe": mock_user.tribe.value,
@@ -157,6 +158,7 @@ async def test_get_users(
         {
             "id": str(user.id),
             "created_at": user.created_at.isoformat(),
+            "items": [],
             "tribe": user.tribe.value,
             "username": user.username,
             "email": user.email,
@@ -200,6 +202,7 @@ async def test_get_user_by_id(
     assert get_user_by_id_response.json() == {
         "id": str(_id),
         "created_at": "2020-01-01T00:00:00",
+        "items": [],
         "tribe": "Neutrals",
         "username": "JohnDoe",
         "email": "john.doe@test.com",
@@ -266,6 +269,7 @@ async def test_get_user_by_username(
     assert get_user_by_username_response.json() == {
         "id": str(_id),
         "created_at": "2020-01-01T00:00:00",
+        "items": [],
         "tribe": "Neutrals",
         "username": "JohnDoe",
         "email": "john.doe@test.com",
@@ -334,6 +338,7 @@ async def test_get_user_by_email(
     assert get_user_by_email_response.json() == {
         "id": str(_id),
         "created_at": "2020-01-01T00:00:00",
+        "items": [],
         "tribe": "Neutrals",
         "username": "JohnDoe",
         "email": "john.doe@test.com",
@@ -420,6 +425,7 @@ async def test_get_users_by_tribe(
         {
             "id": str(user.id),
             "created_at": user.created_at.isoformat(),
+            "items": [],
             "tribe": user.tribe.value,
             "username": user.username,
             "email": user.email,
@@ -490,6 +496,7 @@ async def test_update_user(
     assert update_user_response.json() == {
         "id": str(_id),
         "created_at": updated_user.created_at.isoformat(),
+        "items": [],
         "tribe": updated_user.tribe.value,
         "username": updated_user.username,
         "email": updated_user.email,
@@ -590,6 +597,7 @@ async def test_update_user_password(
     assert update_user_password_response.json() == {
         "id": str(_id),
         "created_at": updated_user.created_at.isoformat(),
+        "items": [],
         "tribe": updated_user.tribe.value,
         "username": updated_user.username,
         "email": updated_user.email,

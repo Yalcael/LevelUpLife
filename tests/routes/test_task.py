@@ -72,6 +72,7 @@ async def test_create_task(
             "username": mock_user.username,
             "email": mock_user.email,
             "tribe": mock_user.tribe,
+            "items": [],
             "strength": mock_user.strength,
             "intelligence": mock_user.intelligence,
             "agility": mock_user.agility,
@@ -175,6 +176,7 @@ async def test_get_tasks(
             "user": {
                 "id": str(task.user.id),
                 "created_at": task.user.created_at.isoformat(),
+                "items": [],
                 "username": task.user.username,
                 "email": task.user.email,
                 "tribe": task.user.tribe,
@@ -242,6 +244,7 @@ async def test_get_task_by_id(
         "user": {
             "id": str(mock_user.id),
             "created_at": mock_user.created_at.isoformat(),
+            "items": [],
             "username": mock_user.username,
             "email": mock_user.email,
             "tribe": mock_user.tribe,
@@ -330,6 +333,7 @@ async def test_get_task_by_title(
         "user": {
             "id": str(mock_user.id),
             "created_at": mock_user.created_at.isoformat(),
+            "items": [],
             "username": mock_user.username,
             "email": mock_user.email,
             "tribe": mock_user.tribe,
@@ -423,6 +427,7 @@ async def test_update_task(
         "user": {
             "id": str(mock_user.id),
             "created_at": mock_user.created_at.isoformat(),
+            "items": [],
             "username": mock_user.username,
             "email": mock_user.email,
             "tribe": mock_user.tribe,

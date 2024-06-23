@@ -20,9 +20,7 @@ class User(UserBase, table=True):
     experience: int = 0
     password: str = Field(min_length=4)
     tasks: list["Task"] = Relationship(back_populates="user")
-    items: list["UserItemLink"] = Relationship(
-        back_populates="users", link_model=UserItemLink
-    )
+    items: list["Item"] = Relationship(back_populates="users", link_model=UserItemLink)
 
 
 class Task(TaskBase, table=True):
@@ -36,6 +34,4 @@ class Item(ItemBase, table=True):
     created_at: datetime = Field(default_factory=lambda: datetime.now())
     updated_at: datetime | None = Field(default=None)
     deleted_at: datetime | None = Field(default=None)
-    users: list["UserItemLink"] = Relationship(
-        back_populates="items", link_model=UserItemLink
-    )
+    users: list["User"] = Relationship(back_populates="items", link_model=UserItemLink)
