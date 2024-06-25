@@ -6,7 +6,8 @@ from fastapi import APIRouter, Depends
 from leveluplife.controllers.item import ItemController
 from leveluplife.dependencies import get_item_controller
 from leveluplife.models.item import ItemCreate, ItemUpdate
-from leveluplife.models.view import ItemView
+from leveluplife.models.relationship import UserItemLinkCreate
+from leveluplife.models.view import ItemView, ItemWithUser
 
 router = APIRouter(
     prefix="/items",
@@ -41,25 +42,39 @@ async def delete_item(
     await item_controller.delete_item(item_id)
 
 
-@router.get("/", response_model=Sequence[ItemView])
+@router.get("/", response_model=Sequence[ItemWithUser])
 async def get_items(
     *, offset: int = 0, item_controller: ItemController = Depends(get_item_controller)
-) -> Sequence[ItemView]:
+) -> Sequence[ItemWithUser]:
     return [
-        ItemView.model_validate(item)
+        ItemWithUser.model_validate(item)
         for item in await item_controller.get_items(offset * 20, 20)
     ]
 
 
-@router.get("/{item_id}", response_model=ItemView)
+@router.get("/{item_id}", response_model=ItemWithUser)
 async def get_item_by_id(
     *, item_id: UUID, item_controller: ItemController = Depends(get_item_controller)
-) -> ItemView:
-    return ItemView.model_validate(await item_controller.get_item_by_id(item_id))
+) -> ItemWithUser:
+    return ItemWithUser.model_validate(await item_controller.get_item_by_id(item_id))
 
 
-@router.get("/type/name", response_model=ItemView)
+@router.get("/type/name", response_model=ItemWithUser)
 async def get_item_by_name(
     *, item_name: str, item_controller: ItemController = Depends(get_item_controller)
-) -> ItemView:
-    return ItemView.model_validate(await item_controller.get_item_by_name(item_name))
+) -> ItemWithUser:
+    return ItemWithUser.model_validate(
+        await item_controller.get_item_by_name(item_name)
+    )
+
+
+@router.patch("/{item_id}/link_user", response_model=ItemWithUser, status_code=200)
+async def give_item_to_user(
+    *,
+    item_id: UUID,
+    user_item_link_create: UserItemLinkCreate,
+    item_controller: ItemController = Depends(get_item_controller),
+) -> ItemWithUser:
+    return ItemWithUser.model_validate(
+        await item_controller.give_item_to_user(item_id, user_item_link_create)
+    )

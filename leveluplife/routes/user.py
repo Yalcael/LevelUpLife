@@ -101,3 +101,10 @@ async def update_user_password(
             user_id, user_update_password.password
         )
     )
+
+
+@router.get("/{user_id}/view", response_model=UserWithTask)
+async def get_user_view(
+    *, user_id: UUID, user_controller: UserController = Depends(get_user_controller)
+) -> UserWithTask:
+    return UserWithTask.model_validate(await user_controller.get_user_view(user_id))

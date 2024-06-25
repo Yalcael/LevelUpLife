@@ -10,9 +10,11 @@ from leveluplife.models.error import (
     ItemAlreadyExistsError,
     ItemNameNotFoundError,
     ItemNotFoundError,
+    ItemAlreadyInUserError,
 )
 from leveluplife.models.item import ItemCreate, ItemUpdate
-from leveluplife.models.table import Item
+from leveluplife.models.relationship import UserItemLink, UserItemLinkCreate
+from leveluplife.models.table import Item, User
 
 
 class ItemController:
@@ -71,3 +73,21 @@ class ItemController:
             return self.session.exec(select(Item).where(Item.name == item_name)).one()
         except NoResultFound:
             raise ItemNameNotFoundError(item_name=item_name)
+
+    async def give_item_to_user(
+        self, item_id: UUID, user_item_link_create: UserItemLinkCreate
+    ) -> Item:
+        try:
+            item = self.session.exec(select(Item).where(Item.id == item_id)).one()
+            for user_id in user_item_link_create.user_ids:
+                user = self.session.exec(select(User).where(User.id == user_id)).one()
+                user_item_link = UserItemLink(user_id=user_id, item_id=item_id)
+                self.session.add(user_item_link)
+            self.session.commit()
+            self.session.refresh(item)
+            return item
+        except NoResultFound:
+            raise ItemNotFoundError(item_id=item_id)
+        except IntegrityError:
+            self.session.rollback()
+            raise ItemAlreadyInUserError(username=user.username, item_id=item_id)

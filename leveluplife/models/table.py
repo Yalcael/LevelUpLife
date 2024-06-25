@@ -34,4 +34,5 @@ class Item(ItemBase, table=True):
     created_at: datetime = Field(default_factory=lambda: datetime.now())
     updated_at: datetime | None = Field(default=None)
     deleted_at: datetime | None = Field(default=None)
+    equipped: bool = Field(default=False)
     users: list["User"] = Relationship(back_populates="items", link_model=UserItemLink)

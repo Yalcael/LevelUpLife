@@ -172,3 +172,21 @@ class ItemNameNotFoundError(BaseError):
         super().__init__(
             name=self.name, message=self.message, status_code=self.status_code
         )
+
+
+class ItemAlreadyInUserError(BaseError):
+    def __init__(
+        self,
+        username: str,
+        item_id: UUID,
+        status_code: int = 409,
+        name: str = "ItemAlreadyInUserError",
+    ):
+        self.name = name
+        self.message = (
+            f"User {username} already have the item {item_id} in his/her inventory."
+        )
+        self.status_code = status_code
+        super().__init__(
+            name=self.name, message=self.message, status_code=self.status_code
+        )

@@ -2,7 +2,7 @@ from datetime import datetime
 from uuid import UUID
 
 from leveluplife.models.item import ItemBase
-from leveluplife.models.table import Item, User
+from leveluplife.models.table import User
 from leveluplife.models.task import TaskBase
 from leveluplife.models.user import UserBase
 
@@ -16,7 +16,7 @@ class UserView(UserBase):
     wise: int = 0
     psycho: int = 0
     experience: int = 0
-    items: list["Item"] = []
+    items: list["ItemView"] = []
 
 
 class TaskView(TaskBase):
@@ -29,7 +29,7 @@ class ItemView(ItemBase):
     created_at: datetime
     updated_at: datetime | None = None
     deleted_at: datetime | None = None
-    users: list["User"] = []
+    equipped: bool
 
 
 class UserWithTask(UserView):
@@ -38,3 +38,7 @@ class UserWithTask(UserView):
 
 class TaskWithUser(TaskView):
     user: "UserView"
+
+
+class ItemWithUser(ItemView):
+    users: list["User"]

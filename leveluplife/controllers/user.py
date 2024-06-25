@@ -13,8 +13,10 @@ from leveluplife.models.error import (
     UserUsernameAlreadyExistsError,
     UserUsernameNotFoundError,
 )
-from leveluplife.models.table import User
+from leveluplife.models.relationship import UserItemLink
+from leveluplife.models.table import User, Item
 from leveluplife.models.user import Tribe, UserCreate, UserUpdate
+from leveluplife.models.view import UserView, ItemView
 
 
 class UserController:
@@ -165,5 +167,65 @@ class UserController:
             self.session.refresh(db_user)
             logger.info(f"Updated user password: {db_user.username}")
             return db_user
+        except NoResultFound:
+            raise UserNotFoundError(user_id=user_id)
+
+    async def get_user_view(self, user_id: UUID) -> UserView:
+        try:
+            # Single query to fetch user and items with equipped status
+            user_with_items = self.session.exec(
+                select(User, UserItemLink, Item)  # Select User, UserItemLink, and Item
+                .join(
+                    UserItemLink, User.id == UserItemLink.user_id
+                )  # Join UserItemLink on user_id
+                .join(Item, UserItemLink.item_id == Item.id)  # Join Item on item_id
+                .where(User.id == user_id)  # Filter for the specific user by user_id
+            ).all()  # Fetch all results
+
+            # Check if any results were returned
+            if not user_with_items:
+                raise UserNotFoundError(user_id=user_id)
+
+            # Extract user details from the first result (user details are the same for all rows)
+            user, _, _ = user_with_items[0]
+
+            # Construct the list of items with their equipped status
+            user_items = [
+                ItemView(
+                    id=item.id,
+                    created_at=item.created_at,
+                    updated_at=item.updated_at,
+                    deleted_at=item.deleted_at,
+                    equipped=user_item_link.equipped,
+                    name=item.name,
+                    description=item.description,
+                    price_sell=item.price_sell,
+                    strength=item.strength,
+                    intelligence=item.intelligence,
+                    agility=item.agility,
+                    wise=item.wise,
+                    psycho=item.psycho,
+                )
+                for _, user_item_link, item in user_with_items  # Iterate over all results
+            ]
+
+            # Return a UserView instance with user details and list of items
+            return UserView(
+                id=user.id,
+                created_at=user.created_at,
+                strength=user.strength,
+                intelligence=user.intelligence,
+                agility=user.agility,
+                wise=user.wise,
+                psycho=user.psycho,
+                experience=user.experience,
+                items=user_items,
+                email=user.email,
+                tribe=user.tribe,
+                username=user.username,
+                biography=user.biography,
+                profile_picture=user.profile_picture,
+                background_image=user.background_image,
+            )
         except NoResultFound:
             raise UserNotFoundError(user_id=user_id)
