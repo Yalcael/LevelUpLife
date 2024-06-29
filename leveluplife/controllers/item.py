@@ -75,14 +75,26 @@ class ItemController:
             raise ItemNameNotFoundError(item_name=item_name)
 
     async def give_item_to_user(
-        self, item_id: UUID, user_item_link_create: UserItemLinkCreate
+        self,
+        item_id: UUID,
+        user_item_link_create: UserItemLinkCreate,
+        equipped: bool = False,
     ) -> Item:
         try:
             item = self.session.exec(select(Item).where(Item.id == item_id)).one()
             for user_id in user_item_link_create.user_ids:
                 user = self.session.exec(select(User).where(User.id == user_id)).one()
-                user_item_link = UserItemLink(user_id=user_id, item_id=item_id)
+
+                # Create UserItemLink with equipped status
+                user_item_link = UserItemLink(
+                    user_id=user_id, item_id=item_id, equipped=equipped
+                )
                 self.session.add(user_item_link)
+
+                # Optionally update the equipped status directly on the item if needed
+                if equipped:
+                    item.equipped = equipped
+
             self.session.commit()
             self.session.refresh(item)
             return item

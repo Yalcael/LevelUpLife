@@ -1,4 +1,3 @@
-from typing import Sequence
 from uuid import UUID
 
 from loguru import logger
@@ -6,17 +5,17 @@ from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlmodel import Session, select
 
 from leveluplife.models.error import (
-    TribeNotFoundError,
     UserEmailAlreadyExistsError,
     UserEmailNotFoundError,
     UserNotFoundError,
     UserUsernameAlreadyExistsError,
     UserUsernameNotFoundError,
+    ItemLinkToUserNotFoundError,
 )
 from leveluplife.models.relationship import UserItemLink
-from leveluplife.models.table import User, Item
+from leveluplife.models.table import User, Item, Task
 from leveluplife.models.user import Tribe, UserCreate, UserUpdate
-from leveluplife.models.view import UserView, ItemView
+from leveluplife.models.view import TaskView, UserView, ItemUserView
 
 
 class UserController:
@@ -92,16 +91,37 @@ class UserController:
                 "psycho": 5,
             }
 
-    async def get_users(self, offset: int, limit: int) -> Sequence[User]:
+    async def get_users(self, offset: int, limit: int) -> list[UserView]:
         logger.info("Getting users")
-        return self.session.exec(select(User).offset(offset).limit(limit)).all()
+        user_with_items = self.session.exec(
+            select(User, UserItemLink, Item, Task)
+            .join(UserItemLink, User.id == UserItemLink.user_id, isouter=True)
+            .join(Item, UserItemLink.item_id == Item.id, isouter=True)
+            .join(Task, User.id == Task.user_id, isouter=True)
+            .offset(offset)
+            .limit(limit)
+        ).all()
 
-    async def get_user_by_id(self, user_id: UUID) -> User:
-        try:
-            logger.info(f"Getting user by id: {user_id}")
-            return self.session.exec(select(User).where(User.id == user_id)).one()
-        except NoResultFound:
-            raise UserNotFoundError(user_id=user_id)
+        users = {}
+        for user, user_item_link, item, task in user_with_items:
+            if user.id not in users:
+                users[user.id] = {"user": user, "items": [], "tasks": []}
+            if user_item_link and item:
+                users[user.id]["items"].append(
+                    ItemUserView(**item.model_dump(), equipped=user_item_link.equipped)
+                )
+            if task:
+                users[user.id]["tasks"].append(TaskView(**task.model_dump()))
+        user_views = [
+            UserView(
+                **user_data["user"].model_dump(exclude={"password"}),
+                items=user_data["items"],
+                tasks=user_data["tasks"],
+            )
+            for user_data in users.values()
+        ]
+
+        return user_views
 
     async def get_user_by_username(self, user_username: str) -> User:
         try:
@@ -120,23 +140,41 @@ class UserController:
             raise UserEmailNotFoundError(user_email=user_email)
 
     async def get_users_by_tribe(
-        self, user_tribe: str, offset: int, limit: int
-    ) -> Sequence[User]:
-        try:
-            # Validate the user_tribe input against the Tribe Enum
-            user_tribe_enum = Tribe(user_tribe)
-        except ValueError:
-            raise TribeNotFoundError(tribe=user_tribe)
-        logger.info(f"Getting user by tribe: {user_tribe_enum}")
-        users = self.session.exec(
-            select(User)
+        self, user_tribe: Tribe, offset: int, limit: int
+    ) -> list[UserView]:
+        logger.info(f"Getting users by tribe: {user_tribe}")
+        user_with_items = self.session.exec(
+            select(User, UserItemLink, Item, Task)
+            .join(UserItemLink, User.id == UserItemLink.user_id, isouter=True)
+            .join(Item, UserItemLink.item_id == Item.id, isouter=True)
+            .join(Task, User.id == Task.user_id, isouter=True)
             .offset(offset)
             .limit(limit)
-            .where(User.tribe == user_tribe_enum)
+            .where(User.tribe == user_tribe)
         ).all()
-        return users
 
-    async def update_user(self, user_id: UUID, user_update: UserUpdate) -> User:
+        users = {}
+        for user, user_item_link, item, task in user_with_items:
+            if user.id not in users:
+                users[user.id] = {"user": user, "items": [], "tasks": []}
+            if user_item_link and item:
+                users[user.id]["items"].append(
+                    ItemUserView(**item.model_dump(), equipped=user_item_link.equipped)
+                )
+            if task:
+                users[user.id]["tasks"].append(TaskView(**task.model_dump()))
+        user_views = [
+            UserView(
+                **user_data["user"].model_dump(exclude={"password"}),
+                items=user_data["items"],
+                tasks=user_data["tasks"],
+            )
+            for user_data in users.values()
+        ]
+
+        return user_views
+
+    async def update_user(self, user_id: UUID, user_update: UserUpdate) -> UserView:
         try:
             db_user = self.session.exec(select(User).where(User.id == user_id)).one()
             db_user_data = user_update.model_dump(exclude_unset=True)
@@ -145,7 +183,7 @@ class UserController:
             self.session.commit()
             self.session.refresh(db_user)
             logger.info(f"Updated user: {db_user.username}")
-            return db_user
+            return await self.get_user_by_id(db_user.id)
         except NoResultFound:
             raise UserNotFoundError(user_id=user_id)
 
@@ -158,7 +196,7 @@ class UserController:
         except NoResultFound:
             raise UserNotFoundError(user_id=user_id)
 
-    async def update_user_password(self, user_id: UUID, password: str) -> User:
+    async def update_user_password(self, user_id: UUID, password: str) -> UserView:
         try:
             db_user = self.session.exec(select(User).where(User.id == user_id)).one()
             db_user.password = password
@@ -166,66 +204,63 @@ class UserController:
             self.session.commit()
             self.session.refresh(db_user)
             logger.info(f"Updated user password: {db_user.username}")
-            return db_user
+            return await self.get_user_by_id(db_user.id)
         except NoResultFound:
             raise UserNotFoundError(user_id=user_id)
 
-    async def get_user_view(self, user_id: UUID) -> UserView:
+    async def equip_item_to_user(
+        self, user_id: UUID, item_id: UUID, equipped: bool
+    ) -> UserView:
         try:
-            # Single query to fetch user and items with equipped status
-            user_with_items = self.session.exec(
-                select(User, UserItemLink, Item)  # Select User, UserItemLink, and Item
-                .join(
-                    UserItemLink, User.id == UserItemLink.user_id
-                )  # Join UserItemLink on user_id
-                .join(Item, UserItemLink.item_id == Item.id)  # Join Item on item_id
-                .where(User.id == user_id)  # Filter for the specific user by user_id
-            ).all()  # Fetch all results
-
-            # Check if any results were returned
-            if not user_with_items:
-                raise UserNotFoundError(user_id=user_id)
-
-            # Extract user details from the first result (user details are the same for all rows)
-            user, _, _ = user_with_items[0]
-
-            # Construct the list of items with their equipped status
-            user_items = [
-                ItemView(
-                    id=item.id,
-                    created_at=item.created_at,
-                    updated_at=item.updated_at,
-                    deleted_at=item.deleted_at,
-                    equipped=user_item_link.equipped,
-                    name=item.name,
-                    description=item.description,
-                    price_sell=item.price_sell,
-                    strength=item.strength,
-                    intelligence=item.intelligence,
-                    agility=item.agility,
-                    wise=item.wise,
-                    psycho=item.psycho,
-                )
-                for _, user_item_link, item in user_with_items  # Iterate over all results
-            ]
-
-            # Return a UserView instance with user details and list of items
-            return UserView(
-                id=user.id,
-                created_at=user.created_at,
-                strength=user.strength,
-                intelligence=user.intelligence,
-                agility=user.agility,
-                wise=user.wise,
-                psycho=user.psycho,
-                experience=user.experience,
-                items=user_items,
-                email=user.email,
-                tribe=user.tribe,
-                username=user.username,
-                biography=user.biography,
-                profile_picture=user.profile_picture,
-                background_image=user.background_image,
-            )
+            self.session.exec(select(User).where(User.id == user_id)).one()
         except NoResultFound:
             raise UserNotFoundError(user_id=user_id)
+
+        try:
+            item_link = self.session.exec(
+                select(UserItemLink).where(
+                    UserItemLink.user_id == user_id, UserItemLink.item_id == item_id
+                )
+            ).one()
+        except NoResultFound:
+            raise ItemLinkToUserNotFoundError(item_id=item_id)
+
+        item_link.equipped = equipped
+        self.session.add(item_link)
+        self.session.commit()
+        self.session.refresh(item_link)
+
+        return await self.get_user_by_id(user_id)
+
+    async def get_user_by_id(self, user_id: UUID) -> UserView:
+        user_with_items = self.session.exec(
+            select(User, UserItemLink, Item)
+            .join(UserItemLink, User.id == UserItemLink.user_id, isouter=True)
+            .join(Item, UserItemLink.item_id == Item.id, isouter=True)
+            .where(User.id == user_id)
+        ).all()
+
+        if not user_with_items:
+            raise UserNotFoundError(user_id=user_id)
+
+        user, _, _ = user_with_items[0]
+
+        user_items = [
+            ItemUserView(
+                **item.model_dump(),
+                equipped=user_item_link.equipped,
+            )
+            for _, user_item_link, item in user_with_items
+            if item
+        ]
+
+        return UserView(
+            items=user_items,
+            **user.model_dump(exclude={"password"}),
+            tasks=[
+                TaskView(
+                    **task.model_dump(),
+                )
+                for task in user.tasks
+            ],
+        )

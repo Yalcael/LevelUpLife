@@ -9,7 +9,6 @@ from starlette.testclient import TestClient
 from leveluplife.controllers.user import UserController
 from leveluplife.dependencies import get_user_controller
 from leveluplife.models.error import (
-    TribeNotFoundError,
     UserEmailAlreadyExistsError,
     UserEmailNotFoundError,
     UserNotFoundError,
@@ -443,27 +442,6 @@ async def test_get_users_by_tribe(
         for user in mock_users
         if user.tribe == Tribe.NOSFERATI
     ]
-
-
-@pytest.mark.asyncio
-async def test_get_users_by_tribe_raise_tribe_not_found_error(
-    client: TestClient, user_controller: UserController, app: FastAPI
-) -> None:
-    def _mock_get_users_by_tribe():
-        user_controller.get_users_by_tribe = AsyncMock(
-            side_effect=TribeNotFoundError(tribe="NonExistingTribe")
-        )
-        return user_controller
-
-    app.dependency_overrides[get_user_controller] = _mock_get_users_by_tribe
-
-    response = client.get("/users/type/tribe?user_tribe=NonExistingTribe")
-    assert response.status_code == 404
-    assert response.json() == {
-        "message": "Tribe with the name NonExistingTribe not found",
-        "name": "TribeNotFoundError",
-        "status_code": 404,
-    }
 
 
 @pytest.mark.asyncio

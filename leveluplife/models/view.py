@@ -16,7 +16,8 @@ class UserView(UserBase):
     wise: int = 0
     psycho: int = 0
     experience: int = 0
-    items: list["ItemView"] = []
+    items: list["ItemUserView"] = []
+    tasks: list["TaskView"] = []
 
 
 class TaskView(TaskBase):
@@ -29,11 +30,10 @@ class ItemView(ItemBase):
     created_at: datetime
     updated_at: datetime | None = None
     deleted_at: datetime | None = None
+
+
+class ItemUserView(ItemView):
     equipped: bool
-
-
-class UserWithTask(UserView):
-    tasks: list["TaskView"] = []
 
 
 class TaskWithUser(TaskView):

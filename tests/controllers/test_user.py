@@ -1,5 +1,4 @@
 import random
-from typing import Sequence
 
 import pytest
 from faker import Faker
@@ -7,7 +6,6 @@ from sqlmodel import Session, select
 
 from leveluplife.controllers.user import UserController
 from leveluplife.models.error import (
-    TribeNotFoundError,
     UserEmailAlreadyExistsError,
     UserEmailNotFoundError,
     UserNotFoundError,
@@ -16,6 +14,7 @@ from leveluplife.models.error import (
 )
 from leveluplife.models.table import User
 from leveluplife.models.user import Tribe, UserCreate, UserUpdate
+from leveluplife.models.view import UserView
 
 # Dictionary of expected stats for each tribe
 expected_stats = {
@@ -255,7 +254,7 @@ async def test_get_users(user_controller: UserController, faker: Faker) -> None:
         created_user = await user_controller.create_user(user_create)
         created_users.append(created_user)
 
-    all_users = await user_controller.get_users(offset=0 * 20, limit=20)
+    all_users = await user_controller.get_users(offset=0, limit=20)
 
     assert len(all_users) == number_users
 
@@ -286,7 +285,6 @@ async def test_get_user_by_id(user_controller: UserController, faker: Faker) -> 
     assert retrieved_user.username == user_create.username
     assert retrieved_user.email == user_create.email
     assert retrieved_user.tribe == user_create.tribe
-    assert retrieved_user.password == user_create.password
 
 
 @pytest.mark.asyncio
@@ -377,7 +375,7 @@ async def test_get_users_by_tribe(
 
     # Test fetching users by tribe
     for tribe in tribes:
-        tribe_users: Sequence[User] = await user_controller.get_users_by_tribe(
+        tribe_users: list[UserView] = await user_controller.get_users_by_tribe(
             tribe.value, offset=0 * 20, limit=20
         )
         filtered_users = [user for user in created_users if user.tribe == tribe]
@@ -386,17 +384,6 @@ async def test_get_users_by_tribe(
 
         for tribe_user in tribe_users:
             assert tribe_user.tribe == tribe
-
-
-@pytest.mark.asyncio
-async def test_get_users_by_tribe_raise_tribe_not_found_error(
-    user_controller: UserController,
-) -> None:
-    non_existent_tribe = "NonExistingTribe"
-    with pytest.raises(TribeNotFoundError):
-        await user_controller.get_users_by_tribe(
-            non_existent_tribe, offset=0 * 20, limit=20
-        )
 
 
 @pytest.mark.asyncio

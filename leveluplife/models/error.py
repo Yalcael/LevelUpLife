@@ -190,3 +190,18 @@ class ItemAlreadyInUserError(BaseError):
         super().__init__(
             name=self.name, message=self.message, status_code=self.status_code
         )
+
+
+class ItemLinkToUserNotFoundError(BaseError):
+    def __init__(
+        self,
+        item_id: UUID,
+        status_code: int = 404,
+        name: str = "ItemLinkToUserNotFoundError",
+    ):
+        self.name = name
+        self.message = f"ItemLinkToUserNotFoundError with Item ID {item_id} not found in the inventory."
+        self.status_code = status_code
+        super().__init__(
+            name=self.name, message=self.message, status_code=self.status_code
+        )
