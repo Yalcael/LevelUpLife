@@ -73,15 +73,17 @@ async def test_create_task(
             "email": mock_user.email,
             "tribe": "Neutrals",
             "items": [],
-            "tasks": [{
-                "id": str(mock_task.id),
-                "created_at": mock_task.created_at.isoformat(),
-                "title": mock_task.title,
-                "description": mock_task.description,
-                "completed": mock_task.completed,
-                "category": mock_task.category,
-                "user_id": str(mock_task.user_id),
-            }],
+            "tasks": [
+                {
+                    "id": str(mock_task.id),
+                    "created_at": mock_task.created_at.isoformat(),
+                    "title": mock_task.title,
+                    "description": mock_task.description,
+                    "completed": mock_task.completed,
+                    "category": mock_task.category,
+                    "user_id": str(mock_task.user_id),
+                }
+            ],
             "strength": mock_user.strength,
             "intelligence": mock_user.intelligence,
             "agility": mock_user.agility,

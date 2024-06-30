@@ -101,27 +101,7 @@ class UserController:
             .offset(offset)
             .limit(limit)
         ).all()
-
-        users = {}
-        for user, user_item_link, item, task in user_with_items:
-            if user.id not in users:
-                users[user.id] = {"user": user, "items": [], "tasks": []}
-            if user_item_link and item:
-                users[user.id]["items"].append(
-                    ItemUserView(**item.model_dump(), equipped=user_item_link.equipped)
-                )
-            if task:
-                users[user.id]["tasks"].append(TaskView(**task.model_dump()))
-        user_views = [
-            UserView(
-                **user_data["user"].model_dump(exclude={"password"}),
-                items=user_data["items"],
-                tasks=user_data["tasks"],
-            )
-            for user_data in users.values()
-        ]
-
-        return user_views
+        return self._construct_user_views(user_with_items)
 
     async def get_user_by_username(self, user_username: str) -> User:
         try:
@@ -153,26 +133,7 @@ class UserController:
             .where(User.tribe == user_tribe)
         ).all()
 
-        users = {}
-        for user, user_item_link, item, task in user_with_items:
-            if user.id not in users:
-                users[user.id] = {"user": user, "items": [], "tasks": []}
-            if user_item_link and item:
-                users[user.id]["items"].append(
-                    ItemUserView(**item.model_dump(), equipped=user_item_link.equipped)
-                )
-            if task:
-                users[user.id]["tasks"].append(TaskView(**task.model_dump()))
-        user_views = [
-            UserView(
-                **user_data["user"].model_dump(exclude={"password"}),
-                items=user_data["items"],
-                tasks=user_data["tasks"],
-            )
-            for user_data in users.values()
-        ]
-
-        return user_views
+        return self._construct_user_views(user_with_items)
 
     async def update_user(self, user_id: UUID, user_update: UserUpdate) -> UserView:
         try:
@@ -243,6 +204,9 @@ class UserController:
         if not user_with_items:
             raise UserNotFoundError(user_id=user_id)
 
+        return self._construct_user_view(user_with_items)
+
+    def _construct_user_view(self, user_with_items) -> UserView:
         user, _, _ = user_with_items[0]
 
         user_items = [
@@ -264,3 +228,25 @@ class UserController:
                 for task in user.tasks
             ],
         )
+
+    def _construct_user_views(self, user_with_items) -> list[UserView]:
+        users = {}
+        for user, user_item_link, item, task in user_with_items:
+            if user.id not in users:
+                users[user.id] = {"user": user, "items": [], "tasks": []}
+            if user_item_link and item:
+                users[user.id]["items"].append(
+                    ItemUserView(**item.model_dump(), equipped=user_item_link.equipped)
+                )
+            if task:
+                if task.title not in [x.title for x in users[user.id]["tasks"]]:
+                    users[user.id]["tasks"].append(TaskView(**task.model_dump()))
+
+        return [
+            UserView(
+                **user_data["user"].model_dump(exclude={"password"}),
+                items=user_data["items"],
+                tasks=user_data["tasks"],
+            )
+            for user_data in users.values()
+        ]
