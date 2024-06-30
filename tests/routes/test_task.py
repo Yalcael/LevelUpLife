@@ -188,7 +188,18 @@ async def test_get_tasks(
                 "id": str(task.user.id),
                 "created_at": task.user.created_at.isoformat(),
                 "items": [],
-                "tasks": [],
+                "tasks": [
+                    {
+                        "id": str(t.id),
+                        "created_at": t.created_at.isoformat(),
+                        "title": t.title,
+                        "description": t.description,
+                        "completed": t.completed,
+                        "category": t.category,
+                        "user_id": str(t.user_id),
+                    }
+                    for t in mock_tasks
+                ],
                 "username": task.user.username,
                 "email": task.user.email,
                 "tribe": task.user.tribe,
@@ -257,6 +268,17 @@ async def test_get_task_by_id(
             "id": str(mock_user.id),
             "created_at": mock_user.created_at.isoformat(),
             "items": [],
+            "tasks": [
+                {
+                    "id": str(_id),
+                    "created_at": "2020-01-01T00:00:00",
+                    "title": "Supermarket",
+                    "description": "John Doe is going to the supermarket",
+                    "completed": False,
+                    "category": "Groceries",
+                    "user_id": str(mock_user.id),
+                }
+            ],
             "username": mock_user.username,
             "email": mock_user.email,
             "tribe": mock_user.tribe,
@@ -346,6 +368,17 @@ async def test_get_task_by_title(
             "id": str(mock_user.id),
             "created_at": mock_user.created_at.isoformat(),
             "items": [],
+            "tasks": [
+                {
+                    "id": str(_id),
+                    "created_at": "2020-01-01T00:00:00",
+                    "title": "Supermarket",
+                    "description": "John Doe is going to the supermarket",
+                    "completed": False,
+                    "category": "Groceries",
+                    "user_id": str(mock_user.id),
+                }
+            ],
             "username": mock_user.username,
             "email": mock_user.email,
             "tribe": mock_user.tribe,
@@ -440,6 +473,17 @@ async def test_update_task(
             "id": str(mock_user.id),
             "created_at": mock_user.created_at.isoformat(),
             "items": [],
+            "tasks": [
+                {
+                    "id": str(_id),
+                    "created_at": updated_task.created_at.isoformat(),
+                    "title": updated_task.title,
+                    "description": updated_task.description,
+                    "completed": updated_task.completed,
+                    "category": updated_task.category,
+                    "user_id": str(mock_user.id),
+                }
+            ],
             "username": mock_user.username,
             "email": mock_user.email,
             "tribe": mock_user.tribe,

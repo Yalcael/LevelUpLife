@@ -103,19 +103,29 @@ class UserController:
         ).all()
         return self._construct_user_views(user_with_items)
 
-    async def get_user_by_username(self, user_username: str) -> User:
+    async def get_user_by_username(self, user_username: str) -> UserView:
         try:
             logger.info(f"Getting user by username: {user_username}")
-            return self.session.exec(
-                select(User).where(User.username == user_username)
-            ).one()
+            user_with_items = self.session.exec(
+                select(User, UserItemLink, Item)
+                .join(UserItemLink, User.id == UserItemLink.user_id, isouter=True)
+                .join(Item, UserItemLink.item_id == Item.id, isouter=True)
+                .where(User.username == user_username)
+            ).all()
+            return self._construct_user_view(user_with_items)
         except NoResultFound:
             raise UserUsernameNotFoundError(user_username=user_username)
 
     async def get_user_by_email(self, user_email: str) -> User:
         try:
             logger.info(f"Getting user by email: {user_email}")
-            return self.session.exec(select(User).where(User.email == user_email)).one()
+            user_with_items = self.session.exec(
+                select(User, UserItemLink, Item)
+                .join(UserItemLink, User.id == UserItemLink.user_id, isouter=True)
+                .join(Item, UserItemLink.item_id == Item.id, isouter=True)
+                .where(User.email == user_email)
+            ).all()
+            return self._construct_user_view(user_with_items)
         except NoResultFound:
             raise UserEmailNotFoundError(user_email=user_email)
 
@@ -144,7 +154,13 @@ class UserController:
             self.session.commit()
             self.session.refresh(db_user)
             logger.info(f"Updated user: {db_user.username}")
-            return await self.get_user_by_id(db_user.id)
+            user_with_items = self.session.exec(
+                select(User, UserItemLink, Item)
+                .join(UserItemLink, User.id == UserItemLink.user_id, isouter=True)
+                .join(Item, UserItemLink.item_id == Item.id, isouter=True)
+                .where(User.id == db_user.id)
+            ).all()
+            return self._construct_user_view(user_with_items)
         except NoResultFound:
             raise UserNotFoundError(user_id=user_id)
 
@@ -165,7 +181,13 @@ class UserController:
             self.session.commit()
             self.session.refresh(db_user)
             logger.info(f"Updated user password: {db_user.username}")
-            return await self.get_user_by_id(db_user.id)
+            user_with_items = self.session.exec(
+                select(User, UserItemLink, Item)
+                .join(UserItemLink, User.id == UserItemLink.user_id, isouter=True)
+                .join(Item, UserItemLink.item_id == Item.id, isouter=True)
+                .where(User.id == db_user.id)
+            ).all()
+            return self._construct_user_view(user_with_items)
         except NoResultFound:
             raise UserNotFoundError(user_id=user_id)
 
