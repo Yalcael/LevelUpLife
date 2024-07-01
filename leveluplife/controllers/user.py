@@ -98,6 +98,7 @@ class UserController:
             .join(UserItemLink, User.id == UserItemLink.user_id, isouter=True)
             .join(Item, UserItemLink.item_id == Item.id, isouter=True)
             .join(Task, User.id == Task.user_id, isouter=True)
+            .order_by(User.username)
             .offset(offset)
             .limit(limit)
         ).all()
@@ -116,7 +117,7 @@ class UserController:
         except NoResultFound:
             raise UserUsernameNotFoundError(user_username=user_username)
 
-    async def get_user_by_email(self, user_email: str) -> User:
+    async def get_user_by_email(self, user_email: str) -> UserView:
         try:
             logger.info(f"Getting user by email: {user_email}")
             user_with_items = self.session.exec(

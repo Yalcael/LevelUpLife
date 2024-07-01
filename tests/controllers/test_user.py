@@ -255,7 +255,7 @@ async def test_get_users(user_controller: UserController, faker: Faker) -> None:
         created_users.append(created_user)
 
     all_users = await user_controller.get_users(offset=0, limit=20)
-
+    created_users.sort(key=lambda u: u.username)
     assert len(all_users) == number_users
 
     for i, created_user in enumerate(created_users):
@@ -314,7 +314,6 @@ async def test_get_user_by_username(
     assert retrieved_user.username == user_create.username
     assert retrieved_user.email == user_create.email
     assert retrieved_user.tribe == user_create.tribe
-    assert retrieved_user.password == user_create.password
 
 
 @pytest.mark.asyncio
@@ -342,7 +341,6 @@ async def test_get_user_by_email(user_controller: UserController, faker: Faker) 
     assert retrieved_user.username == user_create.username
     assert retrieved_user.email == user_create.email
     assert retrieved_user.tribe == user_create.tribe
-    assert retrieved_user.password == user_create.password
 
 
 @pytest.mark.asyncio
@@ -454,7 +452,7 @@ async def test_delete_user_raise_user_not_found_error(
 
 @pytest.mark.asyncio
 async def test_update_user_password(
-    user_controller: UserController, faker: Faker
+    user_controller: UserController, faker: Faker, session: Session
 ) -> None:
     user_create = UserCreate(
         username=faker.unique.user_name()[:18],
@@ -465,8 +463,10 @@ async def test_update_user_password(
     new_user = await user_controller.create_user(user_create)
 
     new_password = faker.password()
-    updated_user = await user_controller.update_user_password(new_user.id, new_password)
+    await user_controller.update_user_password(new_user.id, new_password)
 
+    updated_user = session.exec(select(User).where(User.id == new_user.id)).one()
+    assert updated_user.password == new_password
     assert updated_user.id == new_user.id
     assert updated_user.username == new_user.username
     assert updated_user.email == new_user.email
