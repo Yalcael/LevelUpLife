@@ -11,6 +11,7 @@ from leveluplife.models.error import (
     ItemNameNotFoundError,
     ItemNotFoundError,
     ItemAlreadyInUserError,
+    ItemInUserNotFoundError,
 )
 from leveluplife.models.item import ItemCreate, ItemUpdate
 from leveluplife.models.relationship import UserItemLink, UserItemLinkCreate
@@ -103,3 +104,15 @@ class ItemController:
         except IntegrityError:
             self.session.rollback()
             raise ItemAlreadyInUserError(username=user.username, item_id=item_id)
+
+    async def remote_item_from_user(self, item_id: UUID, user_id: UUID) -> None:
+        try:
+            user_item_link = self.session.exec(
+                select(UserItemLink)
+                .where(UserItemLink.item_id == item_id)
+                .where(UserItemLink.user_id == user_id)
+            ).one()
+            self.session.delete(user_item_link)
+            self.session.commit()
+        except NoResultFound:
+            raise ItemInUserNotFoundError(item_id=item_id, user_id=user_id)

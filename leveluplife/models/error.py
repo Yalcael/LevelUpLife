@@ -205,3 +205,19 @@ class ItemLinkToUserNotFoundError(BaseError):
         super().__init__(
             name=self.name, message=self.message, status_code=self.status_code
         )
+
+
+class ItemInUserNotFoundError(BaseError):
+    def __init__(
+        self,
+        item_id: UUID,
+        user_id: UUID,
+        status_code: int = 404,
+        name: str = "ItemInUserNotFoundError",
+    ):
+        self.name = name
+        self.message = f"Item: {item_id} in User: {user_id} not found."
+        self.status_code = status_code
+        super().__init__(
+            name=self.name, message=self.message, status_code=self.status_code
+        )

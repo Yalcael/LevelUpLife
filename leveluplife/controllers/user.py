@@ -105,30 +105,28 @@ class UserController:
         return self._construct_user_views(user_with_items)
 
     async def get_user_by_username(self, user_username: str) -> UserView:
-        try:
-            logger.info(f"Getting user by username: {user_username}")
-            user_with_items = self.session.exec(
-                select(User, UserItemLink, Item)
-                .join(UserItemLink, User.id == UserItemLink.user_id, isouter=True)
-                .join(Item, UserItemLink.item_id == Item.id, isouter=True)
-                .where(User.username == user_username)
-            ).all()
-            return self._construct_user_view(user_with_items)
-        except NoResultFound:
+        logger.info(f"Getting user by username: {user_username}")
+        user_with_items = self.session.exec(
+            select(User, UserItemLink, Item)
+            .join(UserItemLink, User.id == UserItemLink.user_id, isouter=True)
+            .join(Item, UserItemLink.item_id == Item.id, isouter=True)
+            .where(User.username == user_username)
+        ).all()
+        if not user_with_items:
             raise UserUsernameNotFoundError(user_username=user_username)
+        return self._construct_user_view(user_with_items)
 
     async def get_user_by_email(self, user_email: str) -> UserView:
-        try:
-            logger.info(f"Getting user by email: {user_email}")
-            user_with_items = self.session.exec(
-                select(User, UserItemLink, Item)
-                .join(UserItemLink, User.id == UserItemLink.user_id, isouter=True)
-                .join(Item, UserItemLink.item_id == Item.id, isouter=True)
-                .where(User.email == user_email)
-            ).all()
-            return self._construct_user_view(user_with_items)
-        except NoResultFound:
+        logger.info(f"Getting user by email: {user_email}")
+        user_with_items = self.session.exec(
+            select(User, UserItemLink, Item)
+            .join(UserItemLink, User.id == UserItemLink.user_id, isouter=True)
+            .join(Item, UserItemLink.item_id == Item.id, isouter=True)
+            .where(User.email == user_email)
+        ).all()
+        if not user_with_items:
             raise UserEmailNotFoundError(user_email=user_email)
+        return self._construct_user_view(user_with_items)
 
     async def get_users_by_tribe(
         self, user_tribe: Tribe, offset: int, limit: int

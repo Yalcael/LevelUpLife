@@ -47,7 +47,7 @@ async def test_create_task(
     assert result.description == task_create.description == task.description
     assert result.completed == task_create.completed == task.completed
     assert result.category == task_create.category == task.category
-    assert result.user_id == user.id == task.user_id
+    assert result.user_id == task_create.user_id == task.user_id
 
 
 @pytest.mark.asyncio
