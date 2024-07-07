@@ -8,7 +8,7 @@ from leveluplife.models.error import (
     ItemNotFoundError,
     ItemNameNotFoundError,
 )
-from leveluplife.models.item import ItemCreate
+from leveluplife.models.item import ItemCreate, ItemUpdate
 from leveluplife.models.table import Item
 
 
@@ -167,3 +167,64 @@ async def test_get_item_by_name_raise_item_name_not_found_error(
     non_existent_item_name = faker.unique.word()
     with pytest.raises(ItemNameNotFoundError):
         await item_controller.get_item_by_name(non_existent_item_name)
+
+
+@pytest.mark.asyncio
+async def test_update_item(
+    item_controller: ItemController, faker: Faker
+) -> None:
+    item_create = ItemCreate(
+        name=faker.unique.word(),
+        description=faker.text(max_nb_chars=300),
+        price_sell=faker.random_int(min=0, max=100),
+        strength=faker.random_int(min=0, max=100),
+        intelligence=faker.random_int(min=0, max=100),
+        agility=faker.random_int(min=0, max=100),
+        wise=faker.random_int(min=0, max=100),
+        psycho=faker.random_int(min=0, max=100),
+    )
+    new_item = await item_controller.create_item(item_create)
+
+    item_update = ItemUpdate(
+        name=faker.unique.word(),
+        description=faker.text(max_nb_chars=300),
+        price_sell=faker.random_int(min=0, max=100),
+        strength=faker.random_int(min=0, max=100),
+        intelligence=faker.random_int(min=0, max=100),
+        agility=faker.random_int(min=0, max=100),
+        wise=faker.random_int(min=0, max=100),
+        psycho=faker.random_int(min=0, max=100),
+    )
+
+    updated_item = await item_controller.update_item(new_item.id, item_update)
+
+    assert updated_item.id == new_item.id
+    assert updated_item.name == item_update.name
+    assert updated_item.description == item_update.description
+    assert updated_item.price_sell == item_update.price_sell
+    assert updated_item.strength == item_update.strength
+    assert updated_item.intelligence == item_update.intelligence
+    assert updated_item.agility == item_update.agility
+    assert updated_item.wise == item_update.wise
+    assert updated_item.psycho == item_update.psycho
+
+
+@pytest.mark.asyncio
+async def test_update_item_raise_item_not_found_error(
+    item_controller: ItemController, faker: Faker
+) -> None:
+    item_update = ItemUpdate(
+        name=faker.unique.word(),
+        description=faker.text(max_nb_chars=400),
+        price_sell=faker.random_int(min=0, max=100),
+        strength=faker.random_int(min=0, max=100),
+        intelligence=faker.random_int(min=0, max=100),
+        agility=faker.random_int(min=0, max=100),
+        wise=faker.random_int(min=0, max=100),
+        psycho=faker.random_int(min=0, max=100),
+    )
+
+    nonexistent_item_id = faker.uuid4()
+
+    with pytest.raises(ItemNotFoundError):
+        await item_controller.update_item(nonexistent_item_id, item_update)
