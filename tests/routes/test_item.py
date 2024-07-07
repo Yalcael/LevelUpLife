@@ -89,3 +89,66 @@ async def test_create_item_raise_item_already_exists_error(
         "message": f"Item with the name {item_data['name']} already exists.",
         "status_code": 409,
     }
+
+
+@pytest.mark.asyncio
+async def test_get_items(
+    item_controller: ItemController, client: TestClient, app: FastAPI
+) -> None:
+    mock_items = [
+        Item(
+            id=uuid.uuid4(),
+            created_at=datetime(2020, 1, 1),
+            updated_at=datetime(2021, 1, 1),
+            deleted_at=None,
+            name="JohnDoe",
+            description="John Doe is going to the supermarket",
+            price_sell=100,
+            strength=10,
+            intelligence=10,
+            agility=10,
+            wise=10,
+            psycho=10,
+        ),
+        Item(
+            id=uuid.uuid4(),
+            created_at=datetime(2020, 1, 1),
+            updated_at=datetime(2021, 1, 1),
+            deleted_at=None,
+            name="JohnDoe2",
+            description="John Doe is going to the supermarket",
+            price_sell=100,
+            strength=10,
+            intelligence=10,
+            agility=10,
+            wise=10,
+            psycho=10,
+        ),
+    ]
+
+    def _mock_get_items():
+        item_controller.get_items = AsyncMock(return_value=mock_items)
+        return item_controller
+
+    app.dependency_overrides[get_item_controller] = _mock_get_items
+
+    get_item_response = client.get("/items")
+    assert get_item_response.status_code == 200
+    assert get_item_response.json() == [
+        {
+            "id": str(item.id),
+            "created_at": item.created_at.isoformat(),
+            "updated_at": item.updated_at.isoformat(),
+            "deleted_at": None,
+            "name": item.name,
+            "description": item.description,
+            "price_sell": item.price_sell,
+            "strength": item.strength,
+            "intelligence": item.intelligence,
+            "agility": item.agility,
+            "wise": item.wise,
+            "psycho": item.psycho,
+            "users": [],
+        }
+        for item in mock_items
+    ]
