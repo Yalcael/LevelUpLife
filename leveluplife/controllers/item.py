@@ -105,7 +105,7 @@ class ItemController:
             self.session.rollback()
             raise ItemAlreadyInUserError(username=user.username, item_id=item_id)
 
-    async def remote_item_from_user(self, item_id: UUID, user_id: UUID) -> None:
+    async def remove_item_from_user(self, item_id: UUID, user_id: UUID) -> None:
         try:
             user_item_link = self.session.exec(
                 select(UserItemLink)

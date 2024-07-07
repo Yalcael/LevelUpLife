@@ -81,10 +81,10 @@ async def give_item_to_user(
 
 
 @router.delete("/{item_id}/unlink_user/{user_id}", status_code=204)
-async def remote_item_from_user(
+async def remove_item_from_user(
     *,
     item_id: UUID,
     user_id: UUID,
     item_controller: ItemController = Depends(get_item_controller),
 ) -> None:
-    await item_controller.remote_item_from_user(item_id, user_id)
+    await item_controller.remove_item_from_user(item_id, user_id)

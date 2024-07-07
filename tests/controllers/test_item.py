@@ -3,7 +3,11 @@ from faker import Faker
 from sqlmodel import select, Session
 
 from leveluplife.controllers.item import ItemController
-from leveluplife.models.error import ItemAlreadyExistsError, ItemNotFoundError
+from leveluplife.models.error import (
+    ItemAlreadyExistsError,
+    ItemNotFoundError,
+    ItemNameNotFoundError,
+)
 from leveluplife.models.item import ItemCreate
 from leveluplife.models.table import Item
 
@@ -127,3 +131,39 @@ async def test_get_item_by_id_raise_item_not_found_error(
     non_existent_item_id = faker.uuid4()
     with pytest.raises(ItemNotFoundError):
         await item_controller.get_item_by_id(non_existent_item_id)
+
+
+@pytest.mark.asyncio
+async def test_get_item_by_name(item_controller: ItemController, faker: Faker) -> None:
+    item_create = ItemCreate(
+        name=faker.unique.word(),
+        description=faker.text(max_nb_chars=300),
+        price_sell=faker.random_int(min=0, max=100),
+        strength=faker.random_int(min=0, max=100),
+        intelligence=faker.random_int(min=0, max=100),
+        agility=faker.random_int(min=0, max=100),
+        wise=faker.random_int(min=0, max=100),
+        psycho=faker.random_int(min=0, max=100),
+    )
+
+    created_item = await item_controller.create_item(item_create)
+
+    retrieved_item = await item_controller.get_item_by_name(created_item.name)
+
+    assert retrieved_item.name == item_create.name
+    assert retrieved_item.description == item_create.description
+    assert retrieved_item.price_sell == item_create.price_sell
+    assert retrieved_item.strength == item_create.strength
+    assert retrieved_item.intelligence == item_create.intelligence
+    assert retrieved_item.agility == item_create.agility
+    assert retrieved_item.wise == item_create.wise
+    assert retrieved_item.psycho == item_create.psycho
+
+
+@pytest.mark.asyncio
+async def test_get_item_by_name_raise_item_name_not_found_error(
+    item_controller: ItemController, faker: Faker
+) -> None:
+    non_existent_item_name = faker.unique.word()
+    with pytest.raises(ItemNameNotFoundError):
+        await item_controller.get_item_by_name(non_existent_item_name)
