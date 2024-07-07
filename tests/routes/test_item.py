@@ -7,7 +7,7 @@ from fastapi import FastAPI
 from starlette.testclient import TestClient
 from leveluplife.dependencies import get_item_controller
 from leveluplife.controllers.item import ItemController
-from leveluplife.models.error import ItemAlreadyExistsError
+from leveluplife.models.error import ItemAlreadyExistsError, ItemNotFoundError
 from leveluplife.models.table import Item
 
 
@@ -152,3 +152,70 @@ async def test_get_items(
         }
         for item in mock_items
     ]
+
+
+@pytest.mark.asyncio
+async def test_get_item_by_id(
+    item_controller: ItemController, client: TestClient, app: FastAPI
+) -> None:
+    _id = uuid.uuid4()
+
+    def _mock_get_item_by_id():
+        item_controller.get_item_by_id = AsyncMock(
+            return_value=Item(
+                id=_id,
+                created_at=datetime(2020, 1, 1),
+                updated_at=datetime(2021, 1, 1),
+                name="Supermarket",
+                description="John Doe is going to the supermarket",
+                price_sell=100,
+                strength=10,
+                intelligence=10,
+                agility=10,
+                wise=10,
+                psycho=10,
+            ),
+        )
+        return item_controller
+
+    app.dependency_overrides[get_item_controller] = _mock_get_item_by_id
+    get_item_by_id_response = client.get(f"/items/{_id}")
+    assert get_item_by_id_response.status_code == 200
+    assert get_item_by_id_response.json() == {
+        "id": str(_id),
+        "created_at": "2020-01-01T00:00:00",
+        "updated_at": "2021-01-01T00:00:00",
+        "deleted_at": None,
+        "name": "Supermarket",
+        "description": "John Doe is going to the supermarket",
+        "price_sell": 100,
+        "strength": 10,
+        "intelligence": 10,
+        "agility": 10,
+        "wise": 10,
+        "psycho": 10,
+        "users": [],
+    }
+
+
+@pytest.mark.asyncio
+async def test_get_item_by_id_raise_item_not_found_error(
+    item_controller: ItemController, client: TestClient, app: FastAPI
+) -> None:
+    _id = uuid.uuid4()
+
+    def _mock_get_item_by_id():
+        item_controller.get_item_by_id = AsyncMock(
+            side_effect=ItemNotFoundError(item_id=_id)
+        )
+        return item_controller
+
+    app.dependency_overrides[get_item_controller] = _mock_get_item_by_id
+
+    get_item_by_id_response = client.get(f"/items/{_id}")
+    assert get_item_by_id_response.status_code == 404
+    assert get_item_by_id_response.json() == {
+        "message": f"Item with ID {_id} not found",
+        "name": "ItemNotFoundError",
+        "status_code": 404,
+    }

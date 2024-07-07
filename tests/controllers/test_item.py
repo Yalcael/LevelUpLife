@@ -3,7 +3,7 @@ from faker import Faker
 from sqlmodel import select, Session
 
 from leveluplife.controllers.item import ItemController
-from leveluplife.models.error import ItemAlreadyExistsError
+from leveluplife.models.error import ItemAlreadyExistsError, ItemNotFoundError
 from leveluplife.models.item import ItemCreate
 from leveluplife.models.table import Item
 
@@ -61,9 +61,7 @@ async def test_create_item_already_exists_error(
 
 
 @pytest.mark.asyncio
-async def test_get_items(
-    item_controller: ItemController, faker: Faker
-) -> None:
+async def test_get_items(item_controller: ItemController, faker: Faker) -> None:
     number_items = 5
     created_items = []
     for _ in range(number_items):
@@ -93,3 +91,39 @@ async def test_get_items(
         assert all_items[i].agility == created_item.agility
         assert all_items[i].wise == created_item.wise
         assert all_items[i].psycho == created_item.psycho
+
+
+@pytest.mark.asyncio
+async def test_get_item_by_id(item_controller: ItemController, faker: Faker) -> None:
+    item_create = ItemCreate(
+        name=faker.unique.word(),
+        description=faker.text(max_nb_chars=300),
+        price_sell=faker.random_int(min=0, max=100),
+        strength=faker.random_int(min=0, max=100),
+        intelligence=faker.random_int(min=0, max=100),
+        agility=faker.random_int(min=0, max=100),
+        wise=faker.random_int(min=0, max=100),
+        psycho=faker.random_int(min=0, max=100),
+    )
+
+    created_item = await item_controller.create_item(item_create)
+
+    retrieved_item = await item_controller.get_item_by_id(created_item.id)
+
+    assert retrieved_item.name == item_create.name
+    assert retrieved_item.description == item_create.description
+    assert retrieved_item.price_sell == item_create.price_sell
+    assert retrieved_item.strength == item_create.strength
+    assert retrieved_item.intelligence == item_create.intelligence
+    assert retrieved_item.agility == item_create.agility
+    assert retrieved_item.wise == item_create.wise
+    assert retrieved_item.psycho == item_create.psycho
+
+
+@pytest.mark.asyncio
+async def test_get_item_by_id_raise_item_not_found_error(
+    item_controller: ItemController, faker: Faker
+) -> None:
+    non_existent_item_id = faker.uuid4()
+    with pytest.raises(ItemNotFoundError):
+        await item_controller.get_item_by_id(non_existent_item_id)
