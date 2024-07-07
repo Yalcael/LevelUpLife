@@ -170,9 +170,7 @@ async def test_get_item_by_name_raise_item_name_not_found_error(
 
 
 @pytest.mark.asyncio
-async def test_update_item(
-    item_controller: ItemController, faker: Faker
-) -> None:
+async def test_update_item(item_controller: ItemController, faker: Faker) -> None:
     item_create = ItemCreate(
         name=faker.unique.word(),
         description=faker.text(max_nb_chars=300),

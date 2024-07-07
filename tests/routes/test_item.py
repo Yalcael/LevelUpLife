@@ -290,3 +290,80 @@ async def test_get_item_by_name_raise_item_name_not_found_error(
         "name": "ItemNameNotFoundError",
         "status_code": 404,
     }
+
+
+@pytest.mark.asyncio
+async def test_update_item(
+    client: TestClient, app: FastAPI, item_controller: ItemController
+) -> None:
+    _id = uuid.uuid4()
+
+    item_update_data = {
+        "name": "JohnDoe",
+        "description": "description test",
+        "price_sell": "100",
+        "strength": "10",
+        "intelligence": "10",
+        "agility": "10",
+        "wise": "10",
+        "psycho": "10",
+    }
+
+    updated_item = Item(
+        id=_id,
+        created_at=datetime(2020, 1, 1),
+        updated_at=datetime(2021, 1, 1),
+        deleted_at=None,
+        **item_update_data,
+    )
+
+    def _mock_update_item():
+        item_controller.update_item = AsyncMock(return_value=updated_item)
+        return item_controller
+
+    app.dependency_overrides[get_item_controller] = _mock_update_item
+
+    update_item_response = client.patch(f"/items/{_id}", json=item_update_data)
+    assert update_item_response.status_code == 200
+    assert update_item_response.json() == {
+        "id": str(_id),
+        "created_at": updated_item.created_at.isoformat(),
+        "updated_at": updated_item.updated_at.isoformat(),
+        "deleted_at": None,
+        "name": updated_item.name,
+        "description": updated_item.description,
+        "price_sell": updated_item.price_sell,
+        "strength": updated_item.strength,
+        "intelligence": updated_item.intelligence,
+        "agility": updated_item.agility,
+        "wise": updated_item.wise,
+        "psycho": updated_item.psycho,
+    }
+
+
+@pytest.mark.asyncio
+async def test_update_item_raise_item_not_found_error(
+    item_controller: ItemController, client: TestClient, app: FastAPI
+) -> None:
+    _id = uuid.uuid4()
+
+    item_update_data = {
+        "name": "JohnDoe",
+        "description": "description test",
+        "price_sell": "100",
+        "strength": "10",
+        "intelligence": "10",
+        "agility": "10",
+        "wise": "10",
+        "psycho": "10",
+    }
+
+    def _mock_update_item():
+        item_controller.update_item = AsyncMock(
+            side_effect=ItemNotFoundError(item_id=_id)
+        )
+        return item_controller
+
+    app.dependency_overrides[get_item_controller] = _mock_update_item
+    update_item_response = client.patch(f"/items/{_id}", json=item_update_data)
+    assert update_item_response.status_code == 404
