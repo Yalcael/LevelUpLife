@@ -213,7 +213,7 @@ async def test_update_item_raise_item_not_found_error(
 ) -> None:
     item_update = ItemUpdate(
         name=faker.unique.word(),
-        description=faker.text(max_nb_chars=400),
+        description=faker.text(max_nb_chars=300),
         price_sell=faker.random_int(min=0, max=100),
         strength=faker.random_int(min=0, max=100),
         intelligence=faker.random_int(min=0, max=100),
@@ -226,3 +226,33 @@ async def test_update_item_raise_item_not_found_error(
 
     with pytest.raises(ItemNotFoundError):
         await item_controller.update_item(nonexistent_item_id, item_update)
+
+
+@pytest.mark.asyncio
+async def test_delete_item(item_controller: ItemController, faker: Faker) -> None:
+    item_create = ItemCreate(
+        name=faker.unique.word(),
+        description=faker.text(max_nb_chars=300),
+        price_sell=faker.random_int(min=0, max=100),
+        strength=faker.random_int(min=0, max=100),
+        intelligence=faker.random_int(min=0, max=100),
+        agility=faker.random_int(min=0, max=100),
+        wise=faker.random_int(min=0, max=100),
+        psycho=faker.random_int(min=0, max=100),
+    )
+    new_item = await item_controller.create_item(item_create)
+
+    await item_controller.delete_item(new_item.id)
+
+    with pytest.raises(ItemNotFoundError):
+        await item_controller.delete_item(new_item.id)
+
+
+@pytest.mark.asyncio
+async def test_delete_item_raise_item_not_found_error(
+    item_controller: ItemController, faker: Faker
+) -> None:
+    nonexistent_item_id = faker.uuid4()
+
+    with pytest.raises(ItemNotFoundError):
+        await item_controller.delete_item(nonexistent_item_id)

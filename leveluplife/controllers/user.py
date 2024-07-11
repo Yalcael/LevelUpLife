@@ -254,20 +254,24 @@ class UserController:
         users = {}
         for user, user_item_link, item, task in user_with_items:
             if user.id not in users:
-                users[user.id] = {"user": user, "items": [], "tasks": []}
+                users[user.id] = {"user": user, "items": {}, "tasks": {}}
+
             if user_item_link and item:
-                users[user.id]["items"].append(
-                    ItemUserView(**item.model_dump(), equipped=user_item_link.equipped)
-                )
+                item_key = (item.id, user.id)
+                if item_key not in users[user.id]["items"]:
+                    users[user.id]["items"][item_key] = ItemUserView(
+                        **item.model_dump(), equipped=user_item_link.equipped
+                    )
+
             if task:
-                if task.title not in [x.title for x in users[user.id]["tasks"]]:
-                    users[user.id]["tasks"].append(TaskView(**task.model_dump()))
+                if task.id not in users[user.id]["tasks"]:
+                    users[user.id]["tasks"][task.id] = TaskView(**task.model_dump())
 
         return [
             UserView(
                 **user_data["user"].model_dump(exclude={"password"}),
-                items=user_data["items"],
-                tasks=user_data["tasks"],
+                items=list(user_data["items"].values()),
+                tasks=list(user_data["tasks"].values()),
             )
             for user_data in users.values()
         ]

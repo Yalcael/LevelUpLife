@@ -367,3 +367,35 @@ async def test_update_item_raise_item_not_found_error(
     app.dependency_overrides[get_item_controller] = _mock_update_item
     update_item_response = client.patch(f"/items/{_id}", json=item_update_data)
     assert update_item_response.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_delete_item(
+    item_controller: ItemController, client: TestClient, app: FastAPI
+) -> None:
+    _id = uuid.uuid4()
+
+    def _mock_delete_item():
+        item_controller.delete_item = AsyncMock(return_value=None)
+        return item_controller
+
+    app.dependency_overrides[get_item_controller] = _mock_delete_item
+    delete_item_response = client.delete(f"/items/{_id}")
+    assert delete_item_response.status_code == 204
+
+
+@pytest.mark.asyncio
+async def test_delete_item_raise_item_not_found_error(
+    item_controller: ItemController, client: TestClient, app: FastAPI
+) -> None:
+    _id = uuid.uuid4()
+
+    def _mock_delete_item():
+        item_controller.delete_item = AsyncMock(
+            side_effect=ItemNotFoundError(item_id=_id)
+        )
+        return item_controller
+
+    app.dependency_overrides[get_item_controller] = _mock_delete_item
+    delete_item_response = client.delete(f"/items/{_id}")
+    assert delete_item_response.status_code == 404
