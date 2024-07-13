@@ -1,7 +1,5 @@
 from uuid import UUID
-
 from fastapi import APIRouter, Depends
-
 from leveluplife.controllers.user import UserController
 from leveluplife.dependencies import get_user_controller
 from leveluplife.models.user import UserCreate, UserUpdate, UserUpdatePassword, Tribe
