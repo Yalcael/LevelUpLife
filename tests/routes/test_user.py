@@ -15,8 +15,10 @@ from leveluplife.models.error import (
     UserUsernameAlreadyExistsError,
     UserUsernameNotFoundError,
 )
-from leveluplife.models.table import User
+from leveluplife.models.relationship import UserItemLink
+from leveluplife.models.table import User, Item
 from leveluplife.models.user import Tribe
+from leveluplife.models.view import UserView, ItemUserView
 
 
 @pytest.mark.asyncio
@@ -588,5 +590,96 @@ async def test_update_user_password(
         "background_image": updated_user.background_image,
         "profile_picture": updated_user.profile_picture,
         "experience": updated_user.experience,
+        "tasks": [],
+    }
+
+
+@pytest.mark.asyncio
+async def test_equip_item_to_user(
+    user_controller: UserController, client: TestClient, app: FastAPI
+) -> None:
+    user_id = uuid.uuid4()
+    item_id = uuid.uuid4()
+
+    mock_user = UserView(
+        id=user_id,
+        created_at=datetime(2020, 1, 1),
+        username="JohnDoe",
+        email="john.doe@test.com",
+        tribe=Tribe("Neutrals"),
+        biography="Biography",
+        profile_picture="Profile picture",
+        background_image="Background image",
+        strength=0,
+        intelligence=0,
+        agility=0,
+        wise=0,
+        psycho=0,
+        experience=0,
+        items=[],
+        tasks=[],
+    )
+
+    mock_item = ItemUserView(
+        id=item_id,
+        created_at=datetime(2020, 1, 1),
+        updated_at=datetime(2021, 1, 1),
+        deleted_at=None,
+        name="Item",
+        description="Item description",
+        price_sell=0,
+        strength=0,
+        intelligence=0,
+        agility=0,
+        wise=0,
+        psycho=0,
+        equipped=True,
+    )
+
+    mock_user.items.append(mock_item)
+
+    def _mock_equip_item_to_user():
+        user_controller.equip_item_to_user = AsyncMock(return_value=mock_user)
+        return user_controller
+
+    app.dependency_overrides[get_user_controller] = _mock_equip_item_to_user
+
+    equip_item_response = client.post(
+        f"/users/{user_id}/items/{item_id}/equip", params={"equipped": True}
+    )
+    assert equip_item_response.status_code == 200
+    actual_response = equip_item_response.json()
+    assert actual_response == {
+        "id": str(mock_user.id),
+        "created_at": mock_user.created_at.isoformat(),
+        "items": [
+            {
+                "id": str(item_id),
+                "created_at": mock_item.created_at.isoformat(),
+                "updated_at": mock_item.updated_at.isoformat(),
+                "deleted_at": None,
+                "equipped": True,
+                "name": mock_item.name,
+                "description": mock_item.description,
+                "price_sell": mock_item.price_sell,
+                "strength": mock_item.strength,
+                "intelligence": mock_item.intelligence,
+                "agility": mock_item.agility,
+                "wise": mock_item.wise,
+                "psycho": mock_item.psycho,
+            }
+        ],
+        "username": mock_user.username,
+        "email": mock_user.email,
+        "tribe": mock_user.tribe.value,
+        "agility": mock_user.agility,
+        "background_image": mock_user.background_image,
+        "biography": mock_user.biography,
+        "experience": mock_user.experience,
+        "intelligence": mock_user.intelligence,
+        "profile_picture": mock_user.profile_picture,
+        "psycho": mock_user.psycho,
+        "strength": mock_user.strength,
+        "wise": mock_user.wise,
         "tasks": [],
     }

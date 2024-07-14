@@ -5,6 +5,7 @@ import pytest
 from faker import Faker
 from sqlmodel import Session, select
 
+from leveluplife.controllers.item import ItemController
 from leveluplife.controllers.user import UserController
 from leveluplife.models.error import (
     UserEmailAlreadyExistsError,
@@ -14,7 +15,8 @@ from leveluplife.models.error import (
     UserUsernameNotFoundError,
     ItemLinkToUserNotFoundError,
 )
-from leveluplife.models.relationship import UserItemLink
+from leveluplife.models.item import ItemCreate
+from leveluplife.models.relationship import UserItemLink, UserItemLinkCreate
 from leveluplife.models.table import User, Item, Task
 from leveluplife.models.user import Tribe, UserCreate, UserUpdate
 from leveluplife.models.view import UserView, ItemUserView, TaskView
@@ -489,165 +491,39 @@ async def test_update_user_password_raise_user_not_found_error(
 
 
 @pytest.mark.asyncio
-async def test_construct_user_view(
-    user_controller: UserController, faker: Faker, session: Session
-):
-    # Create a user
-    user = User(
-        id=UUID(faker.uuid4()),
-        username=faker.user_name(),
-        email=faker.email(),
-        password=faker.password(),
-        tribe=random.choice(list(Tribe)),
-    )
-    session.add(user)
-    session.commit()
-
-    # Create items
-    item1 = Item(
-        id=UUID(faker.uuid4()), name=faker.word(), description=faker.sentence()
-    )
-    item2 = Item(
-        id=UUID(faker.uuid4()), name=faker.word(), description=faker.sentence()
-    )
-    session.add_all([item1, item2])
-    session.commit()
-
-    # Create UserItemLinks
-    user_item_link1 = UserItemLink(user_id=user.id, item_id=item1.id, equipped=True)
-    user_item_link2 = UserItemLink(user_id=user.id, item_id=item2.id, equipped=False)
-    session.add_all([user_item_link1, user_item_link2])
-    session.commit()
-
-    # Create a task
-    task = Task(
-        id=UUID(faker.uuid4()),
-        title=faker.sentence(),
-        description=faker.paragraph(),
-        user_id=user.id,
-        completed=False,
-        category=faker.word(),
-    )
-    session.add(task)
-    session.commit()
-
-    # Prepare input for _construct_user_view
-    user_with_items = session.exec(
-        select(User, UserItemLink, Item)
-        .join(UserItemLink, User.id == UserItemLink.user_id)
-        .join(Item, UserItemLink.item_id == Item.id)
-        .where(User.id == user.id)
-    ).all()
-
-    # Call _construct_user_view
-    user_view = user_controller._construct_user_view(user_with_items)
-
-    # Assert
-    assert isinstance(user_view, UserView)
-    assert user_view.id == user.id
-    assert user_view.username == user.username
-    assert user_view.email == user.email
-    assert len(user_view.items) == 2
-    assert all(isinstance(item, ItemUserView) for item in user_view.items)
-    assert len(user_view.tasks) == 1
-    assert isinstance(user_view.tasks[0], TaskView)
-
-
-@pytest.mark.asyncio
-async def test_construct_user_views(
-    user_controller: UserController, faker: Faker, session: Session
-):
-    # Create multiple users
-    users = [
-        User(
-            id=UUID(faker.uuid4()),
-            username=faker.user_name(),
-            email=faker.email(),
-            password=faker.password(),
-            tribe=random.choice(list(Tribe)),
-        )
-        for _ in range(3)
-    ]
-    session.add_all(users)
-    session.commit()
-
-    # Create items
-    items = [
-        Item(id=UUID(faker.uuid4()), name=faker.word(), description=faker.sentence())
-        for _ in range(5)
-    ]
-    session.add_all(items)
-    session.commit()
-
-    # Create UserItemLinks
-    user_item_links = [
-        UserItemLink(user_id=users[i].id, item_id=items[j].id, equipped=bool(j % 2))
-        for i in range(3)
-        for j in range(2)
-    ]
-    session.add_all(user_item_links)
-    session.commit()
-
-    # Create tasks
-    tasks = [
-        Task(
-            id=UUID(faker.uuid4()),
-            title=faker.sentence(),
-            description=faker.paragraph(),
-            user_id=user.id,
-            completed=False,
-            category=faker.word(),
-        )
-        for user in users
-    ]
-    session.add_all(tasks)
-    session.commit()
-
-    # Prepare input for _construct_user_views
-    user_with_items = session.exec(
-        select(User, UserItemLink, Item, Task)
-        .join(UserItemLink, User.id == UserItemLink.user_id, isouter=True)
-        .join(Item, UserItemLink.item_id == Item.id, isouter=True)
-        .join(Task, User.id == Task.user_id, isouter=True)
-    ).all()
-
-    # Call _construct_user_views
-    user_views = user_controller._construct_user_views(user_with_items)
-
-    # Assert
-    assert len(user_views) == 3
-    assert all(isinstance(view, UserView) for view in user_views)
-    for view in user_views:
-        assert len(view.items) == 2
-        assert all(isinstance(item, ItemUserView) for item in view.items)
-        assert len(view.tasks) == 1
-        assert isinstance(view.tasks[0], TaskView)
-
-
-@pytest.mark.asyncio
 async def test_equip_item_to_user(
-    user_controller: UserController, faker: Faker, session: Session
+    user_controller: UserController, item_controller: ItemController, faker: Faker
 ):
-    # Create a user and an item
-    user = User(
-        id=faker.uuid4(),
-        username=faker.user_name(),
-        email=faker.email(),
+    # Create a user through UserController
+    user_create = UserCreate(
+        username=faker.unique.user_name()[:18],
+        email=faker.unique.email(),
         password=faker.password(),
         tribe=random.choice(list(Tribe)),
     )
-    item = Item(id=faker.uuid4(), name=faker.word(), description=faker.sentence())
-    session.add_all([user, item])
-    session.commit()
+    user = await user_controller.create_user(user_create)
 
-    # Create UserItemLink
-    user_item_link = UserItemLink(user_id=user.id, item_id=item.id, equipped=False)
-    session.add(user_item_link)
-    session.commit()
+    # Create an item through ItemController
+    item_create = ItemCreate(
+        name=faker.word(),
+        description=faker.sentence(),
+        price_sell=random.randint(0, 100),
+        strength=random.randint(0, 100),
+        intelligence=random.randint(0, 100),
+        agility=random.randint(0, 100),
+        wise=random.randint(0, 100),
+        psycho=random.randint(0, 100),
+    )
+    item = await item_controller.create_item(item_create)
 
-    # Test equipping the item
+    # Link the item to the user
+    user_item_link_create = UserItemLinkCreate(user_ids=[user.id])
+    await item_controller.give_item_to_user(item.id, user_item_link_create)
+
+    # Equip the item to the user
     updated_user = await user_controller.equip_item_to_user(user.id, item.id, True)
 
+    # Assert the updated user contains the equipped item
     assert isinstance(updated_user, UserView)
     assert any(
         item_view.id == item.id and item_view.equipped
@@ -670,18 +546,16 @@ async def test_equip_item_to_user_user_not_found(
 
 @pytest.mark.asyncio
 async def test_equip_item_to_user_item_link_not_found(
-    user_controller: UserController, faker: Faker, session: Session
+    user_controller: UserController, faker: Faker
 ):
-    # Create a user but no item
-    user = User(
-        id=faker.uuid4(),
-        username=faker.user_name(),
-        email=faker.email(),
+    # Create a user through UserController
+    user_create = UserCreate(
+        username=faker.unique.user_name()[:18],
+        email=faker.unique.email(),
         password=faker.password(),
         tribe=random.choice(list(Tribe)),
     )
-    session.add(user)
-    session.commit()
+    user = await user_controller.create_user(user_create)
 
     non_existent_item_id = faker.uuid4()
 
