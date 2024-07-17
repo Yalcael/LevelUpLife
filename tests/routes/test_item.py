@@ -1,7 +1,6 @@
 import uuid
 from datetime import datetime
 from unittest.mock import AsyncMock
-
 import pytest
 from fastapi import FastAPI
 from starlette.testclient import TestClient
@@ -11,8 +10,10 @@ from leveluplife.models.error import (
     ItemAlreadyExistsError,
     ItemNotFoundError,
     ItemNameNotFoundError,
+    ItemInUserNotFoundError,
 )
-from leveluplife.models.table import Item
+from leveluplife.models.table import Item, User
+from leveluplife.models.user import Tribe
 
 
 @pytest.mark.asyncio
@@ -399,3 +400,134 @@ async def test_delete_item_raise_item_not_found_error(
     app.dependency_overrides[get_item_controller] = _mock_delete_item
     delete_item_response = client.delete(f"/items/{_id}")
     assert delete_item_response.status_code == 404
+
+
+# @pytest.mark.asyncio
+# async def test_give_item_to_user(
+#     item_controller: ItemController, app: FastAPI, client: TestClient
+# ) -> None:
+#     item_id = uuid.uuid4()
+#     user_id = uuid.uuid4()
+#     user_item_link_create = {"user_ids": [str(user_id)]}
+#
+#     def _mock_give_item_to_user():
+#         item_controller.give_item_to_user = AsyncMock(
+#             return_value=Item(
+#                 id=item_id,
+#                 created_at=datetime(2020, 1, 1),
+#                 updated_at=datetime(2021, 1, 1),
+#                 deleted_at=None,
+#                 name="Supermarket",
+#                 description="John Doe is going to the supermarket",
+#                 price_sell=100,
+#                 strength=10,
+#                 intelligence=10,
+#                 agility=10,
+#                 wise=10,
+#                 psycho=10,
+#                 users=[
+#                     User(
+#                         id=user_id,
+#                         username="JohnDoe",
+#                         created_at=datetime(2020, 1, 1),
+#                         email="john.doe@test.com",
+#                         background_image="background_image",
+#                         biography="biography",
+#                         profile_picture="profile_picture",
+#                         tribe=Tribe.NOSFERATI,
+#                         strength=10,
+#                         intelligence=10,
+#                         items=[],
+#                         agility=10,
+#                         wise=10,
+#                         psycho=10,
+#                         experience=0,
+#                         tasks=[],
+#                     )
+#                 ],
+#             )
+#         )
+#         return item_controller
+#
+#     app.dependency_overrides[get_item_controller] = _mock_give_item_to_user
+#
+#     give_item_response = client.patch(
+#         f"/items/{item_id}/link_user", json=user_item_link_create
+#     )
+#
+#     assert give_item_response.status_code == 200
+#     assert give_item_response.json() == {
+#         "id": str(item_id),
+#         "created_at": "2020-01-01T00:00:00",
+#         "updated_at": "2021-01-01T00:00:00",
+#         "deleted_at": None,
+#         "name": "Supermarket",
+#         "description": "John Doe is going to the supermarket",
+#         "price_sell": 100,
+#         "strength": 10,
+#         "intelligence": 10,
+#         "agility": 10,
+#         "wise": 10,
+#         "psycho": 10,
+#         "users": [
+#             {
+#                 "id": str(user_id),
+#                 "created_at": "2020-01-01T00:00:00",
+#                 "username": "JohnDoe",
+#                 "email": "john.doe@test.com",
+#                 "tribe": "Nosferati",
+#                 "biography": "biography",
+#                 "profile_picture": "profile_picture",
+#                 "background_image": "background_image",
+#                 "strength": 10,
+#                 "intelligence": 10,
+#                 "items": [],
+#                 "agility": 10,
+#                 "wise": 10,
+#                 "psycho": 10,
+#                 "experience": 0,
+#                 "tasks": [],
+#             }
+#         ],
+#     }
+
+
+@pytest.mark.asyncio
+async def test_remove_item_from_user(
+    item_controller: ItemController, app: FastAPI, client: TestClient
+) -> None:
+    item_id = uuid.uuid4()
+    user_id = uuid.uuid4()
+
+    def _mock_remove_item_from_user():
+        item_controller.remove_item_from_user = AsyncMock(return_value=None)
+        return item_controller
+
+    app.dependency_overrides[get_item_controller] = _mock_remove_item_from_user
+
+    remove_item_response = client.delete(f"/items/{item_id}/unlink_user/{user_id}")
+    assert remove_item_response.status_code == 204
+
+
+@pytest.mark.asyncio
+async def test_remove_item_from_user_raise_item_in_user_not_found_error(
+    item_controller: ItemController, app: FastAPI, client: TestClient
+) -> None:
+    item_id = uuid.uuid4()
+    user_id = uuid.uuid4()
+
+    def _mock_remove_item_from_user():
+        item_controller.remove_item_from_user = AsyncMock(
+            side_effect=ItemInUserNotFoundError(item_id=item_id, user_id=user_id)
+        )
+        return item_controller
+
+    app.dependency_overrides[get_item_controller] = _mock_remove_item_from_user
+
+    remove_item_response = client.delete(f"/items/{item_id}/unlink_user/{user_id}")
+    assert remove_item_response.status_code == 404
+    assert remove_item_response.json() == {
+        "message": f"Item: {item_id} in User: {user_id} not found.",
+        "name": "ItemInUserNotFoundError",
+        "status_code": 404,
+    }
