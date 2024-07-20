@@ -41,12 +41,12 @@ async def delete_item(
     await item_controller.delete_item(item_id)
 
 
-@router.get("/", response_model=Sequence[ItemWithUser])
+@router.get("/", response_model=Sequence[ItemView])
 async def get_items(
     *, offset: int = 0, item_controller: ItemController = Depends(get_item_controller)
-) -> Sequence[ItemWithUser]:
+) -> Sequence[ItemView]:
     return [
-        ItemWithUser.model_validate(item)
+        ItemView.model_validate(item)
         for item in await item_controller.get_items(offset * 20, 20)
     ]
 
@@ -58,13 +58,11 @@ async def get_item_by_id(
     return ItemWithUser.model_validate(await item_controller.get_item_by_id(item_id))
 
 
-@router.get("/type/name", response_model=ItemWithUser)
+@router.get("/type/name", response_model=ItemView)
 async def get_item_by_name(
     *, item_name: str, item_controller: ItemController = Depends(get_item_controller)
-) -> ItemWithUser:
-    return ItemWithUser.model_validate(
-        await item_controller.get_item_by_name(item_name)
-    )
+) -> ItemView:
+    return ItemView.model_validate(await item_controller.get_item_by_name(item_name))
 
 
 @router.patch("/{item_id}/link_user", response_model=ItemWithUser, status_code=200)

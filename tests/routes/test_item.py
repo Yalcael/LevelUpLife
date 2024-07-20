@@ -152,7 +152,6 @@ async def test_get_items(
             "agility": item.agility,
             "wise": item.wise,
             "psycho": item.psycho,
-            "users": [],
         }
         for item in mock_items
     ]
@@ -265,7 +264,6 @@ async def test_get_item_by_name(
         "agility": 10,
         "wise": 10,
         "psycho": 10,
-        "users": [],
     }
 
 

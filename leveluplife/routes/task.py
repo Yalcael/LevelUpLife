@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends
 from leveluplife.controllers.task import TaskController
 from leveluplife.dependencies import get_task_controller
 from leveluplife.models.task import TaskCreate, TaskUpdate
-from leveluplife.models.view import TaskWithUser
+from leveluplife.models.view import TaskView
 
 router = APIRouter(
     prefix="/tasks",
@@ -15,47 +15,45 @@ router = APIRouter(
 )
 
 
-@router.post("/", response_model=TaskWithUser, status_code=201)
+@router.post("/", response_model=TaskView, status_code=201)
 async def create_task(
     task: TaskCreate, task_controller: TaskController = Depends(get_task_controller)
-) -> TaskWithUser:
-    return TaskWithUser.model_validate(await task_controller.create_task(task))
+) -> TaskView:
+    return TaskView.model_validate(await task_controller.create_task(task))
 
 
-@router.get("/", response_model=Sequence[TaskWithUser])
+@router.get("/", response_model=Sequence[TaskView])
 async def get_tasks(
     *, offset: int = 0, task_controller: TaskController = Depends(get_task_controller)
-) -> Sequence[TaskWithUser]:
+) -> Sequence[TaskView]:
     return [
-        TaskWithUser.model_validate(task)
+        TaskView.model_validate(task)
         for task in await task_controller.get_tasks(offset * 20, 20)
     ]
 
 
-@router.get("/{task_id}", response_model=TaskWithUser)
+@router.get("/{task_id}", response_model=TaskView)
 async def get_task_by_id(
     *, task_id: UUID, task_controller: TaskController = Depends(get_task_controller)
-) -> TaskWithUser:
-    return TaskWithUser.model_validate(await task_controller.get_task_by_id(task_id))
+) -> TaskView:
+    return TaskView.model_validate(await task_controller.get_task_by_id(task_id))
 
 
-@router.get("/type/title", response_model=TaskWithUser)
+@router.get("/type/title", response_model=TaskView)
 async def get_task_by_title(
     *, task_title: str, task_controller: TaskController = Depends(get_task_controller)
-) -> TaskWithUser:
-    return TaskWithUser.model_validate(
-        await task_controller.get_task_by_title(task_title)
-    )
+) -> TaskView:
+    return TaskView.model_validate(await task_controller.get_task_by_title(task_title))
 
 
-@router.patch("/{task_id}", response_model=TaskWithUser)
+@router.patch("/{task_id}", response_model=TaskView)
 async def update_task(
     *,
     task_id: UUID,
     task_update: TaskUpdate,
     task_controller: TaskController = Depends(get_task_controller),
-) -> TaskWithUser:
-    return TaskWithUser.model_validate(
+) -> TaskView:
+    return TaskView.model_validate(
         await task_controller.update_task(task_id, task_update)
     )
 

@@ -29,25 +29,10 @@ async def test_create_task(
         "user_id": str(uuid.uuid4()),
     }
 
-    mock_user = User(
-        id=uuid.UUID(task_data["user_id"]),
-        username="test_user",
-        email="test@gmail.com",
-        tribe=Tribe.NEUTRALS,
-        created_at=datetime(2020, 1, 1),
-        strength=5,
-        intelligence=5,
-        agility=5,
-        wise=5,
-        psycho=5,
-        experience=0,
-    )
-
     mock_task = Task(
         id=uuid.uuid4(),
         created_at=datetime(2020, 1, 1),
         **task_data,
-        user=mock_user,
     )
 
     def _mock_create_task():
@@ -66,34 +51,6 @@ async def test_create_task(
         "completed": mock_task.completed,
         "category": mock_task.category,
         "user_id": str(mock_task.user_id),
-        "user": {
-            "id": str(mock_user.id),
-            "created_at": mock_user.created_at.isoformat(),
-            "username": mock_user.username,
-            "email": mock_user.email,
-            "tribe": "Neutrals",
-            "items": [],
-            "tasks": [
-                {
-                    "id": str(mock_task.id),
-                    "created_at": mock_task.created_at.isoformat(),
-                    "title": mock_task.title,
-                    "description": mock_task.description,
-                    "completed": mock_task.completed,
-                    "category": mock_task.category,
-                    "user_id": str(mock_task.user_id),
-                }
-            ],
-            "strength": mock_user.strength,
-            "intelligence": mock_user.intelligence,
-            "agility": mock_user.agility,
-            "wise": mock_user.wise,
-            "psycho": mock_user.psycho,
-            "experience": mock_user.experience,
-            "biography": mock_user.biography,
-            "profile_picture": mock_user.profile_picture,
-            "background_image": mock_user.background_image,
-        },
     }
 
 
@@ -153,7 +110,6 @@ async def test_get_tasks(
             completed=False,
             category="Groceries",
             user_id=mock_user.id,
-            user=mock_user,
         ),
         Task(
             id=uuid.uuid4(),
@@ -163,7 +119,6 @@ async def test_get_tasks(
             completed=True,
             category="Fun",
             user_id=mock_user.id,
-            user=mock_user,
         ),
     ]
 
@@ -184,35 +139,6 @@ async def test_get_tasks(
             "completed": task.completed,
             "category": task.category,
             "user_id": str(task.user_id),
-            "user": {
-                "id": str(task.user.id),
-                "created_at": task.user.created_at.isoformat(),
-                "items": [],
-                "tasks": [
-                    {
-                        "id": str(t.id),
-                        "created_at": t.created_at.isoformat(),
-                        "title": t.title,
-                        "description": t.description,
-                        "completed": t.completed,
-                        "category": t.category,
-                        "user_id": str(t.user_id),
-                    }
-                    for t in mock_tasks
-                ],
-                "username": task.user.username,
-                "email": task.user.email,
-                "tribe": task.user.tribe,
-                "strength": task.user.strength,
-                "intelligence": task.user.intelligence,
-                "agility": task.user.agility,
-                "wise": task.user.wise,
-                "psycho": task.user.psycho,
-                "experience": task.user.experience,
-                "biography": task.user.biography,
-                "profile_picture": task.user.profile_picture,
-                "background_image": task.user.background_image,
-            },
         }
         for task in mock_tasks
     ]
@@ -248,7 +174,6 @@ async def test_get_task_by_id(
                 completed=False,
                 category="Groceries",
                 user_id=mock_user.id,
-                user=mock_user,
             ),
         )
         return task_controller
@@ -264,34 +189,6 @@ async def test_get_task_by_id(
         "completed": False,
         "category": "Groceries",
         "user_id": str(mock_user.id),
-        "user": {
-            "id": str(mock_user.id),
-            "created_at": mock_user.created_at.isoformat(),
-            "items": [],
-            "tasks": [
-                {
-                    "id": str(_id),
-                    "created_at": "2020-01-01T00:00:00",
-                    "title": "Supermarket",
-                    "description": "John Doe is going to the supermarket",
-                    "completed": False,
-                    "category": "Groceries",
-                    "user_id": str(mock_user.id),
-                }
-            ],
-            "username": mock_user.username,
-            "email": mock_user.email,
-            "tribe": mock_user.tribe,
-            "strength": mock_user.strength,
-            "intelligence": mock_user.intelligence,
-            "agility": mock_user.agility,
-            "wise": mock_user.wise,
-            "psycho": mock_user.psycho,
-            "experience": mock_user.experience,
-            "biography": mock_user.biography,
-            "profile_picture": mock_user.profile_picture,
-            "background_image": mock_user.background_image,
-        },
     }
 
 
@@ -348,7 +245,6 @@ async def test_get_task_by_title(
                 completed=False,
                 category="Groceries",
                 user_id=mock_user.id,
-                user=mock_user,
             ),
         )
         return task_controller
@@ -364,34 +260,6 @@ async def test_get_task_by_title(
         "completed": False,
         "category": "Groceries",
         "user_id": str(mock_user.id),
-        "user": {
-            "id": str(mock_user.id),
-            "created_at": mock_user.created_at.isoformat(),
-            "items": [],
-            "tasks": [
-                {
-                    "id": str(_id),
-                    "created_at": "2020-01-01T00:00:00",
-                    "title": "Supermarket",
-                    "description": "John Doe is going to the supermarket",
-                    "completed": False,
-                    "category": "Groceries",
-                    "user_id": str(mock_user.id),
-                }
-            ],
-            "username": mock_user.username,
-            "email": mock_user.email,
-            "tribe": mock_user.tribe,
-            "strength": mock_user.strength,
-            "intelligence": mock_user.intelligence,
-            "agility": mock_user.agility,
-            "wise": mock_user.wise,
-            "psycho": mock_user.psycho,
-            "experience": mock_user.experience,
-            "biography": mock_user.biography,
-            "profile_picture": mock_user.profile_picture,
-            "background_image": mock_user.background_image,
-        },
     }
 
 
@@ -450,7 +318,6 @@ async def test_update_task(
         created_at=datetime(2020, 1, 1),
         **task_update_data,
         user_id=mock_user.id,
-        user=mock_user,
     )
 
     def _mock_update_task():
@@ -469,34 +336,6 @@ async def test_update_task(
         "completed": updated_task.completed,
         "category": updated_task.category,
         "user_id": str(mock_user.id),
-        "user": {
-            "id": str(mock_user.id),
-            "created_at": mock_user.created_at.isoformat(),
-            "items": [],
-            "tasks": [
-                {
-                    "id": str(_id),
-                    "created_at": updated_task.created_at.isoformat(),
-                    "title": updated_task.title,
-                    "description": updated_task.description,
-                    "completed": updated_task.completed,
-                    "category": updated_task.category,
-                    "user_id": str(mock_user.id),
-                }
-            ],
-            "username": mock_user.username,
-            "email": mock_user.email,
-            "tribe": mock_user.tribe,
-            "strength": mock_user.strength,
-            "intelligence": mock_user.intelligence,
-            "agility": mock_user.agility,
-            "wise": mock_user.wise,
-            "psycho": mock_user.psycho,
-            "experience": mock_user.experience,
-            "biography": mock_user.biography,
-            "profile_picture": mock_user.profile_picture,
-            "background_image": mock_user.background_image,
-        },
     }
 
 
