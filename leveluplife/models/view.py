@@ -36,9 +36,5 @@ class ItemUserView(ItemView):
     equipped: bool
 
 
-class TaskWithUser(TaskView):
-    user: "UserView"
-
-
 class ItemWithUser(ItemView):
     users: list["User"]
