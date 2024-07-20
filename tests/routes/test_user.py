@@ -15,8 +15,7 @@ from leveluplife.models.error import (
     UserUsernameAlreadyExistsError,
     UserUsernameNotFoundError,
 )
-from leveluplife.models.relationship import UserItemLink
-from leveluplife.models.table import User, Item
+from leveluplife.models.table import User
 from leveluplife.models.user import Tribe
 from leveluplife.models.view import UserView, ItemUserView
 

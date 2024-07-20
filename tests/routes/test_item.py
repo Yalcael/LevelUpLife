@@ -12,8 +12,7 @@ from leveluplife.models.error import (
     ItemNameNotFoundError,
     ItemInUserNotFoundError,
 )
-from leveluplife.models.table import Item, User
-from leveluplife.models.user import Tribe
+from leveluplife.models.table import Item
 
 
 @pytest.mark.asyncio

@@ -1,5 +1,4 @@
 import random
-from uuid import UUID
 
 import pytest
 from faker import Faker
@@ -16,10 +15,10 @@ from leveluplife.models.error import (
     ItemLinkToUserNotFoundError,
 )
 from leveluplife.models.item import ItemCreate
-from leveluplife.models.relationship import UserItemLink, UserItemLinkCreate
-from leveluplife.models.table import User, Item, Task
+from leveluplife.models.relationship import UserItemLinkCreate
+from leveluplife.models.table import User
 from leveluplife.models.user import Tribe, UserCreate, UserUpdate
-from leveluplife.models.view import UserView, ItemUserView, TaskView
+from leveluplife.models.view import UserView
 
 # Dictionary of expected stats for each tribe
 expected_stats = {
