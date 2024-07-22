@@ -16,6 +16,7 @@ from leveluplife.models.error import (
 from leveluplife.models.item import ItemCreate, ItemUpdate
 from leveluplife.models.relationship import UserItemLink, UserItemLinkCreate
 from leveluplife.models.table import Item, User
+from leveluplife.models.view import ItemWithUser
 
 
 class ItemController:
@@ -80,11 +81,13 @@ class ItemController:
         item_id: UUID,
         user_item_link_create: UserItemLinkCreate,
         equipped: bool = False,
-    ) -> Item:
+    ) -> ItemWithUser:
         try:
             item = self.session.exec(select(Item).where(Item.id == item_id)).one()
+            users = []
             for user_id in user_item_link_create.user_ids:
                 user = self.session.exec(select(User).where(User.id == user_id)).one()
+                users.append(user)
 
                 # Create UserItemLink with equipped status
                 user_item_link = UserItemLink(
@@ -98,7 +101,9 @@ class ItemController:
 
             self.session.commit()
             self.session.refresh(item)
-            return item
+
+            # Return ItemWithUser instead of Item
+            return ItemWithUser(**item.model_dump(), users=users)
         except NoResultFound:
             raise ItemNotFoundError(item_id=item_id)
         except IntegrityError:
