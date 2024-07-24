@@ -89,20 +89,17 @@ class ItemController:
                 user = self.session.exec(select(User).where(User.id == user_id)).one()
                 users.append(user)
 
-                # Create UserItemLink with equipped status
                 user_item_link = UserItemLink(
                     user_id=user_id, item_id=item_id, equipped=equipped
                 )
                 self.session.add(user_item_link)
 
-                # Optionally update the equipped status directly on the item if needed
                 if equipped:
                     item.equipped = equipped
 
             self.session.commit()
             self.session.refresh(item)
 
-            # Return ItemWithUser instead of Item
             return ItemWithUser(**item.model_dump(), users=users)
         except NoResultFound:
             raise ItemNotFoundError(item_id=item_id)
