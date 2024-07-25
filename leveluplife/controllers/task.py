@@ -18,7 +18,7 @@ class TaskController:
 
     async def create_task(self, task_create: TaskCreate) -> Task:
         try:
-            new_task = Task(**task_create.dict())
+            new_task = Task(**task_create.model_dump())
             self.session.add(new_task)
             self.session.commit()
             self.session.refresh(new_task)

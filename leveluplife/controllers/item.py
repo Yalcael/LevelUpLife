@@ -25,7 +25,7 @@ class ItemController:
 
     async def create_item(self, item_create: ItemCreate) -> Item:
         try:
-            new_item = Item(**item_create.dict())
+            new_item = Item(**item_create.model_dump())
             self.session.add(new_item)
             self.session.commit()
             self.session.refresh(new_item)

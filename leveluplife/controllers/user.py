@@ -28,7 +28,7 @@ class UserController:
             initial_stats = self.calculate_initial_stats(user_create.tribe)
 
             # Create new user
-            new_user = User(**user_create.dict(), **initial_stats)
+            new_user = User(**user_create.model_dump(), **initial_stats)
             self.session.add(new_user)
             self.session.commit()
             self.session.refresh(new_user)
