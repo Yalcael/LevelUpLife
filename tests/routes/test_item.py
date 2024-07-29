@@ -402,7 +402,9 @@ async def test_delete_item_raise_item_not_found_error(
 
 
 @pytest.mark.asyncio
-async def test_give_item_to_user(item_controller: ItemController, app: FastAPI, client: TestClient) -> None:
+async def test_give_item_to_user(
+    item_controller: ItemController, app: FastAPI, client: TestClient
+) -> None:
     item_id = uuid.uuid4()
     user_id = uuid.uuid4()
     user_item_link_create = {"user_ids": [str(user_id)]}
@@ -448,7 +450,9 @@ async def test_give_item_to_user(item_controller: ItemController, app: FastAPI, 
 
     app.dependency_overrides[get_item_controller] = _mock_give_item_to_user
 
-    give_item_response = client.patch(f"/items/{item_id}/link_user", json=user_item_link_create)
+    give_item_response = client.patch(
+        f"/items/{item_id}/link_user", json=user_item_link_create
+    )
 
     assert give_item_response.status_code == 200
     assert give_item_response.json() == {
