@@ -83,7 +83,7 @@ async def test_get_tasks(
     task_controller: TaskController, user_controller: UserController, faker: Faker
 ) -> None:
     user_create = UserCreate(
-        username=faker.unique.user_name(),
+        username=faker.unique.user_name()[:18],
         email=faker.unique.email(),
         password=faker.password(),
         tribe=Tribe.NOSFERATI,

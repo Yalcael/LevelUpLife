@@ -15,7 +15,7 @@ from leveluplife.models.error import (
 from leveluplife.models.relationship import UserItemLink
 from leveluplife.models.table import User, Item, Task
 from leveluplife.models.user import Tribe, UserCreate, UserUpdate
-from leveluplife.models.view import TaskView, UserView, ItemUserView
+from leveluplife.models.view import TaskView, UserView, ItemUserView, RatingView
 
 
 class UserController:
@@ -248,13 +248,19 @@ class UserController:
                 )
                 for task in user.tasks
             ],
+            ratings=[
+                RatingView(
+                    **rating.model_dump(),
+                )
+                for rating in user.ratings
+            ],
         )
 
     def _construct_user_views(self, user_with_items) -> list[UserView]:
         users = {}
         for user, user_item_link, item, task in user_with_items:
             if user.id not in users:
-                users[user.id] = {"user": user, "items": {}, "tasks": {}}
+                users[user.id] = {"user": user, "items": {}, "tasks": {}, "ratings": {}}
 
             if user_item_link and item:
                 item_key = (item.id, user.id)
@@ -272,6 +278,7 @@ class UserController:
                 **user_data["user"].model_dump(exclude={"password"}),
                 items=list(user_data["items"].values()),
                 tasks=list(user_data["tasks"].values()),
+                ratings=list(user_data["ratings"].values()),
             )
             for user_data in users.values()
         ]

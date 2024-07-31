@@ -2,6 +2,7 @@ from datetime import datetime
 from uuid import UUID
 
 from leveluplife.models.item import ItemBase
+from leveluplife.models.rating import RatingBase
 from leveluplife.models.table import User
 from leveluplife.models.task import TaskBase
 from leveluplife.models.user import UserBase
@@ -18,6 +19,7 @@ class UserView(UserBase):
     experience: int = 0
     items: list["ItemUserView"] = []
     tasks: list["TaskView"] = []
+    ratings: list["RatingView"] = []
 
 
 class TaskView(TaskBase):
@@ -38,3 +40,8 @@ class ItemUserView(ItemView):
 
 class ItemWithUser(ItemView):
     users: list["User"]
+
+
+class RatingView(RatingBase):
+    id: UUID
+    created_at: datetime

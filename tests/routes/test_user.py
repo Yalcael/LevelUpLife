@@ -64,6 +64,7 @@ async def test_create_user(
         "strength": mock_user.strength,
         "wise": mock_user.wise,
         "tasks": [],
+        "ratings": [],
     }
 
 
@@ -172,6 +173,7 @@ async def test_get_users(
             "strength": user.strength,
             "wise": user.wise,
             "tasks": [],
+            "ratings": [],
         }
         for user in mock_users
     ]
@@ -216,6 +218,7 @@ async def test_get_user_by_id(
         "strength": 0,
         "wise": 0,
         "tasks": [],
+        "ratings": [],
     }
 
 
@@ -283,6 +286,7 @@ async def test_get_user_by_username(
         "strength": 0,
         "wise": 0,
         "tasks": [],
+        "ratings": [],
     }
 
 
@@ -352,6 +356,7 @@ async def test_get_user_by_email(
         "strength": 0,
         "wise": 0,
         "tasks": [],
+        "ratings": [],
     }
 
 
@@ -439,6 +444,7 @@ async def test_get_users_by_tribe(
             "strength": user.strength,
             "wise": user.wise,
             "tasks": [],
+            "ratings": [],
         }
         for user in mock_users
         if user.tribe == Tribe.NOSFERATI
@@ -489,6 +495,7 @@ async def test_update_user(
         "strength": updated_user.strength,
         "wise": updated_user.wise,
         "tasks": [],
+        "ratings": [],
     }
 
 
@@ -590,6 +597,7 @@ async def test_update_user_password(
         "profile_picture": updated_user.profile_picture,
         "experience": updated_user.experience,
         "tasks": [],
+        "ratings": [],
     }
 
 
@@ -681,4 +689,5 @@ async def test_equip_item_to_user(
         "strength": mock_user.strength,
         "wise": mock_user.wise,
         "tasks": [],
+        "ratings": [],
     }
