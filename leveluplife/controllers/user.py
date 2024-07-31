@@ -13,7 +13,7 @@ from leveluplife.models.error import (
     ItemLinkToUserNotFoundError,
 )
 from leveluplife.models.relationship import UserItemLink
-from leveluplife.models.table import User, Item, Task
+from leveluplife.models.table import User, Item, Task, Rating
 from leveluplife.models.user import Tribe, UserCreate, UserUpdate
 from leveluplife.models.view import TaskView, UserView, ItemUserView, RatingView
 
@@ -94,10 +94,11 @@ class UserController:
     async def get_users(self, offset: int, limit: int) -> list[UserView]:
         logger.info("Getting users")
         user_with_items = self.session.exec(
-            select(User, UserItemLink, Item, Task)
+            select(User, UserItemLink, Item, Task, Rating)
             .join(UserItemLink, User.id == UserItemLink.user_id, isouter=True)
             .join(Item, UserItemLink.item_id == Item.id, isouter=True)
             .join(Task, User.id == Task.user_id, isouter=True)
+            .join(Rating, User.id == Rating.user_id, isouter=True)
             .order_by(User.username)
             .offset(offset)
             .limit(limit)
@@ -133,10 +134,11 @@ class UserController:
     ) -> list[UserView]:
         logger.info(f"Getting users by tribe: {user_tribe}")
         user_with_items = self.session.exec(
-            select(User, UserItemLink, Item, Task)
+            select(User, UserItemLink, Item, Task, Rating)
             .join(UserItemLink, User.id == UserItemLink.user_id, isouter=True)
             .join(Item, UserItemLink.item_id == Item.id, isouter=True)
             .join(Task, User.id == Task.user_id, isouter=True)
+            .join(Rating, User.id == Rating.user_id, isouter=True)
             .offset(offset)
             .limit(limit)
             .where(User.tribe == user_tribe)
@@ -258,7 +260,7 @@ class UserController:
 
     def _construct_user_views(self, user_with_items) -> list[UserView]:
         users = {}
-        for user, user_item_link, item, task in user_with_items:
+        for user, user_item_link, item, task, rating in user_with_items:
             if user.id not in users:
                 users[user.id] = {"user": user, "items": {}, "tasks": {}, "ratings": {}}
 
@@ -272,6 +274,12 @@ class UserController:
             if task:
                 if task.id not in users[user.id]["tasks"]:
                     users[user.id]["tasks"][task.id] = TaskView(**task.model_dump())
+
+            if rating:
+                if rating.id not in users[user.id]["ratings"]:
+                    users[user.id]["ratings"][rating.id] = RatingView(
+                        **rating.model_dump()
+                    )
 
         return [
             UserView(
