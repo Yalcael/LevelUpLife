@@ -19,6 +19,9 @@ class RatingController:
 
     async def create_rating(self, rating_create: RatingCreate) -> Rating:
         try:
+            logger.info(
+                f"Creating rating for task: {rating_create.task_id} as user: {rating_create.user_id}"
+            )
             new_rating = Rating(**rating_create.model_dump())
             self.session.add(new_rating)
             self.session.commit()
@@ -41,15 +44,30 @@ class RatingController:
         except NoResultFound:
             raise RatingNotFoundError(rating_id=rating_id)
 
-    async def update_rating(self, rating_id: UUID, rating_update: RatingUpdate) -> Rating:
+    async def update_rating(
+        self, rating_id: UUID, rating_update: RatingUpdate
+    ) -> Rating:
         try:
-            db_rating = self.session.exec(select(Rating).where(Rating.id == rating_id)).one()
+            db_rating = self.session.exec(
+                select(Rating).where(Rating.id == rating_id)
+            ).one()
             db_rating_data = rating_update.model_dump(exclude_unset=True)
             db_rating.sqlmodel_update(db_rating_data)
             self.session.add(db_rating)
             self.session.commit()
             self.session.refresh(db_rating)
-            logger.info(f"Updated task: {db_rating.id}")
+            logger.info(f"Updated rating: {db_rating.id}")
             return db_rating
+        except NoResultFound:
+            raise RatingNotFoundError(rating_id=rating_id)
+
+    async def delete_rating(self, rating_id: UUID) -> None:
+        try:
+            db_rating = self.session.exec(
+                select(Rating).where(Rating.id == rating_id)
+            ).one()
+            self.session.delete(db_rating)
+            self.session.commit()
+            logger.info(f"Deleted rating: {db_rating.id}")
         except NoResultFound:
             raise RatingNotFoundError(rating_id=rating_id)

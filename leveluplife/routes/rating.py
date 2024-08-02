@@ -27,7 +27,7 @@ async def create_rating(
 async def get_ratings(
     *,
     offset: int = 0,
-    rating_controller: RatingController = Depends(get_rating_controller)
+    rating_controller: RatingController = Depends(get_rating_controller),
 ) -> Sequence[RatingView]:
     return [
         RatingView.model_validate(rating)
@@ -39,7 +39,7 @@ async def get_ratings(
 async def get_rating_by_id(
     *,
     rating_id: UUID,
-    rating_controller: RatingController = Depends(get_rating_controller)
+    rating_controller: RatingController = Depends(get_rating_controller),
 ) -> RatingView:
     return RatingView.model_validate(
         await rating_controller.get_rating_by_id(rating_id)
@@ -56,3 +56,12 @@ async def update_task(
     return RatingView.model_validate(
         await rating_controller.update_rating(rating_id, rating_update)
     )
+
+
+@router.delete("/{rating_id}", status_code=204)
+async def delete_rating(
+    *,
+    rating_id: UUID,
+    rating_controller: RatingController = Depends(get_rating_controller),
+) -> None:
+    await rating_controller.delete_rating(rating_id)
