@@ -1,3 +1,6 @@
+from typing import Sequence
+from uuid import UUID
+
 from fastapi import APIRouter, Depends
 
 from leveluplife.controllers.rating import RatingController
@@ -18,3 +21,26 @@ async def create_rating(
     rating_controller: RatingController = Depends(get_rating_controller),
 ) -> RatingView:
     return RatingView.model_validate(await rating_controller.create_rating(rating))
+
+
+@router.get("/", response_model=Sequence[RatingView])
+async def get_ratings(
+    *,
+    offset: int = 0,
+    rating_controller: RatingController = Depends(get_rating_controller)
+) -> Sequence[RatingView]:
+    return [
+        RatingView.model_validate(rating)
+        for rating in await rating_controller.get_ratings(offset * 20, 20)
+    ]
+
+
+@router.get("/{rating_id}", response_model=RatingView)
+async def get_rating_by_id(
+    *,
+    rating_id: UUID,
+    rating_controller: RatingController = Depends(get_rating_controller)
+) -> RatingView:
+    return RatingView.model_validate(
+        await rating_controller.get_rating_by_id(rating_id)
+    )
