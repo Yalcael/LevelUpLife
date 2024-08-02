@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends
 
 from leveluplife.controllers.rating import RatingController
 from leveluplife.dependencies import get_rating_controller
-from leveluplife.models.rating import RatingCreate
+from leveluplife.models.rating import RatingCreate, RatingUpdate
 from leveluplife.models.view import RatingView
 
 router = APIRouter(
@@ -43,4 +43,16 @@ async def get_rating_by_id(
 ) -> RatingView:
     return RatingView.model_validate(
         await rating_controller.get_rating_by_id(rating_id)
+    )
+
+
+@router.patch("/{rating_id}", response_model=RatingView)
+async def update_task(
+    *,
+    rating_id: UUID,
+    rating_update: RatingUpdate,
+    rating_controller: RatingController = Depends(get_rating_controller),
+) -> RatingView:
+    return RatingView.model_validate(
+        await rating_controller.update_rating(rating_id, rating_update)
     )

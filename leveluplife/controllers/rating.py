@@ -9,7 +9,7 @@ from leveluplife.models.error import (
     UserNotFoundError,
     RatingNotFoundError,
 )
-from leveluplife.models.rating import RatingCreate
+from leveluplife.models.rating import RatingCreate, RatingUpdate
 from leveluplife.models.table import Rating
 
 
@@ -38,5 +38,18 @@ class RatingController:
         try:
             logger.info(f"Getting rating by id: {rating_id}")
             return self.session.exec(select(Rating).where(Rating.id == rating_id)).one()
+        except NoResultFound:
+            raise RatingNotFoundError(rating_id=rating_id)
+
+    async def update_rating(self, rating_id: UUID, rating_update: RatingUpdate) -> Rating:
+        try:
+            db_rating = self.session.exec(select(Rating).where(Rating.id == rating_id)).one()
+            db_rating_data = rating_update.model_dump(exclude_unset=True)
+            db_rating.sqlmodel_update(db_rating_data)
+            self.session.add(db_rating)
+            self.session.commit()
+            self.session.refresh(db_rating)
+            logger.info(f"Updated task: {db_rating.id}")
+            return db_rating
         except NoResultFound:
             raise RatingNotFoundError(rating_id=rating_id)
