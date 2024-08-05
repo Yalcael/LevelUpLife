@@ -1,7 +1,7 @@
 from typing import Sequence
 from uuid import UUID
 
-from sqlalchemy.exc import IntegrityError, NoResultFound
+from sqlalchemy.exc import NoResultFound
 from sqlmodel import Session, select
 from loguru import logger
 from leveluplife.models.error import (
@@ -17,8 +17,12 @@ class RatingController:
     def __init__(self, session: Session) -> None:
         self.session = session
 
-    def get_rating_by_task_and_user(self, task_id: UUID, user_id: UUID) -> Rating | None:
-        statement = select(Rating).where(Rating.task_id == task_id, Rating.user_id == user_id)
+    def get_rating_by_task_and_user(
+        self, task_id: UUID, user_id: UUID
+    ) -> Rating | None:
+        statement = select(Rating).where(
+            Rating.task_id == task_id, Rating.user_id == user_id
+        )
         result = self.session.exec(statement)
         return result.one_or_none()
 
@@ -27,7 +31,9 @@ class RatingController:
             logger.info(
                 f"Creating rating for task: {rating_create.task_id} as user: {rating_create.user_id}"
             )
-            existing_rating = self.get_rating_by_task_and_user(rating_create.task_id, rating_create.user_id)
+            existing_rating = self.get_rating_by_task_and_user(
+                rating_create.task_id, rating_create.user_id
+            )
             if existing_rating:
                 raise RatingAlreadyExistsError(task_id=rating_create.task_id)
 

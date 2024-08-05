@@ -57,7 +57,10 @@ async def test_create_rating(
 
 @pytest.mark.asyncio
 async def test_create_rating_already_exists_error(
-    task_controller: TaskController, user_controller: UserController, rating_controller: RatingController, faker: Faker
+    task_controller: TaskController,
+    user_controller: UserController,
+    rating_controller: RatingController,
+    faker: Faker,
 ) -> None:
     user_create = UserCreate(
         username=faker.unique.user_name(),
