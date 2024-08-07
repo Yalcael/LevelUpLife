@@ -1,4 +1,5 @@
 import uuid
+from uuid import UUID
 from datetime import datetime
 from unittest.mock import AsyncMock
 from leveluplife.dependencies import get_rating_controller
@@ -7,6 +8,7 @@ from fastapi import FastAPI
 from starlette.testclient import TestClient
 
 from leveluplife.controllers.rating import RatingController
+from leveluplife.models.error import RatingAlreadyExistsError
 from leveluplife.models.table import Rating
 
 
@@ -40,4 +42,31 @@ async def test_create_rating(
         "rating": mock_rating.rating,
         "user_id": str(mock_rating.user_id),
         "task_id": str(mock_rating.task_id),
+    }
+
+
+@pytest.mark.asyncio
+async def test_create_rating_raise_rating_already_exists_error(
+    rating_controller: RatingController, app: FastAPI, client: TestClient
+):
+    rating_data = {
+        "rating": 5,
+        "user_id": str(uuid.uuid4()),
+        "task_id": str(uuid.uuid4()),
+    }
+
+    def _mock_create_rating():
+        rating_controller.create_rating = AsyncMock(
+            side_effect=RatingAlreadyExistsError(task_id=UUID(rating_data["task_id"]))
+        )
+        return rating_controller
+
+    app.dependency_overrides[get_rating_controller] = _mock_create_rating
+
+    create_rating_response = client.post("/ratings", json=rating_data)
+    assert create_rating_response.status_code == 409
+    assert create_rating_response.json() == {
+        "name": "RatingAlreadyExistsError",
+        "message": f"Rating for the task {rating_data['task_id']} already exists.",
+        "status_code": 409,
     }
