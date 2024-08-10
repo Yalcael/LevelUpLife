@@ -5,7 +5,7 @@ from sqlmodel import Session, select
 from leveluplife.controllers.rating import RatingController
 from leveluplife.controllers.task import TaskController
 from leveluplife.controllers.user import UserController
-from leveluplife.models.error import RatingAlreadyExistsError, UserNotFoundError
+from leveluplife.models.error import RatingAlreadyExistsError
 from leveluplife.models.rating import RatingCreate
 from leveluplife.models.table import Rating
 from leveluplife.models.task import TaskCreate
@@ -95,7 +95,10 @@ async def test_create_rating_already_exists_error(
 
 @pytest.mark.asyncio
 async def test_get_ratings(
-    rating_controller: RatingController, user_controller: UserController, task_controller: TaskController, faker: Faker
+    rating_controller: RatingController,
+    user_controller: UserController,
+    task_controller: TaskController,
+    faker: Faker,
 ) -> None:
     user_create = UserCreate(
         username=faker.unique.user_name()[:18],
