@@ -6,7 +6,6 @@ from sqlmodel import Session, select
 from loguru import logger
 from leveluplife.models.error import (
     RatingAlreadyExistsError,
-    UserNotFoundError,
     RatingNotFoundError,
 )
 from leveluplife.models.rating import RatingCreate, RatingUpdate
@@ -27,23 +26,20 @@ class RatingController:
         return result.one_or_none()
 
     async def create_rating(self, rating_create: RatingCreate) -> Rating:
-        try:
-            logger.info(
-                f"Creating rating for task: {rating_create.task_id} as user: {rating_create.user_id}"
-            )
-            existing_rating = self.get_rating_by_task_and_user(
-                rating_create.task_id, rating_create.user_id
-            )
-            if existing_rating:
-                raise RatingAlreadyExistsError(task_id=rating_create.task_id)
+        logger.info(
+            f"Creating rating for task: {rating_create.task_id} as user: {rating_create.user_id}"
+        )
+        existing_rating = self.get_rating_by_task_and_user(
+            rating_create.task_id, rating_create.user_id
+        )
+        if existing_rating:
+            raise RatingAlreadyExistsError(task_id=rating_create.task_id)
 
-            new_rating = Rating(**rating_create.model_dump())
-            self.session.add(new_rating)
-            self.session.commit()
-            self.session.refresh(new_rating)
-            return new_rating
-        except NoResultFound:
-            raise UserNotFoundError(user_id=rating_create.user_id)
+        new_rating = Rating(**rating_create.model_dump())
+        self.session.add(new_rating)
+        self.session.commit()
+        self.session.refresh(new_rating)
+        return new_rating
 
     async def get_ratings(self, offset: int, limit: int) -> Sequence[Rating]:
         logger.info("Getting ratings")
