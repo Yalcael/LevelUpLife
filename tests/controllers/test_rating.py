@@ -140,7 +140,10 @@ async def test_get_ratings(
 
 @pytest.mark.asyncio
 async def test_get_rating_by_id(
-    task_controller: TaskController, user_controller: UserController, rating_controller: RatingController, faker: Faker
+    task_controller: TaskController,
+    user_controller: UserController,
+    rating_controller: RatingController,
+    faker: Faker,
 ) -> None:
     user_create = UserCreate(
         username=faker.unique.user_name(),
@@ -175,7 +178,10 @@ async def test_get_rating_by_id(
 
 @pytest.mark.asyncio
 async def test_get_rating_by_id_raise_rating_not_found_error(
-    task_controller: TaskController, user_controller: UserController, rating_controller: RatingController, faker: Faker
+    task_controller: TaskController,
+    user_controller: UserController,
+    rating_controller: RatingController,
+    faker: Faker,
 ) -> None:
     user_create = UserCreate(
         username=faker.unique.user_name(),
