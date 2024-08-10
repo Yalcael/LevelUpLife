@@ -5,7 +5,7 @@ from sqlmodel import Session, select
 from leveluplife.controllers.rating import RatingController
 from leveluplife.controllers.task import TaskController
 from leveluplife.controllers.user import UserController
-from leveluplife.models.error import RatingAlreadyExistsError
+from leveluplife.models.error import RatingAlreadyExistsError, RatingNotFoundError
 from leveluplife.models.rating import RatingCreate
 from leveluplife.models.table import Rating
 from leveluplife.models.task import TaskCreate
@@ -136,3 +136,71 @@ async def test_get_ratings(
         assert all_ratings[i].task_id == created_rating.task_id
         assert all_ratings[i].user_id == created_rating.user_id
         assert all_ratings[i].rating == created_rating.rating
+
+
+@pytest.mark.asyncio
+async def test_get_rating_by_id(
+    task_controller: TaskController, user_controller: UserController, rating_controller: RatingController, faker: Faker
+) -> None:
+    user_create = UserCreate(
+        username=faker.unique.user_name(),
+        email=faker.unique.email(),
+        password=faker.password(),
+        tribe=Tribe.NOSFERATI,
+    )
+    user = await user_controller.create_user(user_create)
+
+    task_create = TaskCreate(
+        title=faker.unique.word(),
+        description=faker.text(max_nb_chars=400),
+        completed=faker.boolean(),
+        category=faker.word(),
+        user_id=user.id,
+    )
+    task = await task_controller.create_task(task_create)
+
+    rating_create = RatingCreate(
+        task_id=task.id,
+        user_id=user.id,
+        rating=faker.random_int(min=0, max=10),
+    )
+    created_rating = await rating_controller.create_rating(rating_create)
+
+    retrieved_rating = await rating_controller.get_rating_by_id(created_rating.id)
+
+    assert retrieved_rating.task_id == created_rating.task_id
+    assert retrieved_rating.user_id == created_rating.user_id
+    assert retrieved_rating.rating == created_rating.rating
+
+
+@pytest.mark.asyncio
+async def test_get_rating_by_id_raise_rating_not_found_error(
+    task_controller: TaskController, user_controller: UserController, rating_controller: RatingController, faker: Faker
+) -> None:
+    user_create = UserCreate(
+        username=faker.unique.user_name(),
+        email=faker.unique.email(),
+        password=faker.password(),
+        tribe=Tribe.NOSFERATI,
+    )
+    user = await user_controller.create_user(user_create)
+
+    task_create = TaskCreate(
+        title=faker.unique.word(),
+        description=faker.text(max_nb_chars=400),
+        completed=faker.boolean(),
+        category=faker.word(),
+        user_id=user.id,
+    )
+    task = await task_controller.create_task(task_create)
+
+    rating_create = RatingCreate(
+        task_id=task.id,
+        user_id=user.id,
+        rating=faker.random_int(min=0, max=10),
+    )
+    await rating_controller.create_rating(rating_create)
+
+    non_existent_rating_id = faker.uuid4()
+    with pytest.raises(RatingNotFoundError):
+        await rating_controller.get_rating_by_id(non_existent_rating_id)
