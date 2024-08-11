@@ -9,7 +9,6 @@ from starlette.testclient import TestClient
 
 from leveluplife.controllers.rating import RatingController
 from leveluplife.models.error import RatingAlreadyExistsError, RatingNotFoundError
-from leveluplife.models.rating import RatingUpdate
 from leveluplife.models.table import Rating, Task, User
 from leveluplife.models.user import Tribe
 
@@ -307,6 +306,44 @@ async def test_update_rating_raise_rating_not_found_error(
     update_rating_response = client.patch(f"/ratings/{mock_rating_id}", json=rating_update_data)
     assert update_rating_response.status_code == 404
     assert update_rating_response.json() == {
+        "message": f"Rating with ID {mock_rating_id} not found",
+        "name": "RatingNotFoundError",
+        "status_code": 404,
+    }
+
+
+@pytest.mark.asyncio
+async def test_delete_rating(
+    rating_controller: RatingController, client: TestClient, app: FastAPI
+) -> None:
+    mock_rating_id = uuid.uuid4()
+
+    def _mock_delete_rating():
+        rating_controller.delete_rating = AsyncMock(return_value=None)
+        return rating_controller
+
+    app.dependency_overrides[get_rating_controller] = _mock_delete_rating
+    delete_rating_response = client.delete(f"/ratings/{mock_rating_id}")
+    assert delete_rating_response.status_code == 204
+
+
+@pytest.mark.asyncio
+async def test_delete_rating_raise_rating_not_found_error(
+    rating_controller: RatingController, client: TestClient, app: FastAPI
+) -> None:
+    mock_rating_id = uuid.uuid4()
+
+    def _mock_delete_rating():
+        rating_controller.delete_rating = AsyncMock(
+            side_effect=RatingNotFoundError(rating_id=mock_rating_id)
+        )
+        return rating_controller
+
+    app.dependency_overrides[get_rating_controller] = _mock_delete_rating
+
+    delete_rating_response = client.delete(f"/ratings/{mock_rating_id}")
+    assert delete_rating_response.status_code == 404
+    assert delete_rating_response.json() == {
         "message": f"Rating with ID {mock_rating_id} not found",
         "name": "RatingNotFoundError",
         "status_code": 404,
