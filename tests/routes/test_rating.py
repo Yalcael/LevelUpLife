@@ -274,7 +274,9 @@ async def test_update_rating(
 
     app.dependency_overrides[get_rating_controller] = _mock_update_rating
 
-    update_rating_response = client.patch(f"/ratings/{mock_rating_id}", json=rating_update_data)
+    update_rating_response = client.patch(
+        f"/ratings/{mock_rating_id}", json=rating_update_data
+    )
     assert update_rating_response.status_code == 200
     assert update_rating_response.json() == {
         "id": str(updated_rating.id),
@@ -303,7 +305,9 @@ async def test_update_rating_raise_rating_not_found_error(
 
     app.dependency_overrides[get_rating_controller] = _mock_update_rating
 
-    update_rating_response = client.patch(f"/ratings/{mock_rating_id}", json=rating_update_data)
+    update_rating_response = client.patch(
+        f"/ratings/{mock_rating_id}", json=rating_update_data
+    )
     assert update_rating_response.status_code == 404
     assert update_rating_response.json() == {
         "message": f"Rating with ID {mock_rating_id} not found",
