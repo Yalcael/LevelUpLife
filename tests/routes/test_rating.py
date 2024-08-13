@@ -6,7 +6,6 @@ from leveluplife.dependencies import get_rating_controller
 import pytest
 from fastapi import FastAPI
 from starlette.testclient import TestClient
-
 from leveluplife.controllers.rating import RatingController
 from leveluplife.models.error import RatingAlreadyExistsError, RatingNotFoundError
 from leveluplife.models.table import Rating, Task, User
