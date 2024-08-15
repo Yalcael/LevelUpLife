@@ -1,8 +1,6 @@
 from contextlib import asynccontextmanager
-
 import uvicorn
 from fastapi import FastAPI
-
 from leveluplife.api import create_app
 from leveluplife.database import create_app_engine, create_db_and_tables
 
@@ -13,7 +11,6 @@ async def lifespan(_app: FastAPI):
     create_db_and_tables(engine)
     engine.dispose()
     yield
-
 
 app = create_app(lifespan=lifespan)
 
