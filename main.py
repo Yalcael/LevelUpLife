@@ -12,6 +12,7 @@ async def lifespan(_app: FastAPI):
     engine.dispose()
     yield
 
+
 app = create_app(lifespan=lifespan)
 
 
