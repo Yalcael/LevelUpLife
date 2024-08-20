@@ -1,7 +1,6 @@
 from typing import Sequence
 from uuid import UUID
 from fastapi import APIRouter, Depends
-
 from leveluplife.controllers.item import ItemController
 from leveluplife.dependencies import get_item_controller
 from leveluplife.models.item import ItemCreate, ItemUpdate
