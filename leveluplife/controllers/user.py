@@ -4,6 +4,7 @@ from loguru import logger
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlmodel import Session, select
 
+from leveluplife.auth.hash import get_password_hash
 from leveluplife.models.error import (
     UserEmailAlreadyExistsError,
     UserEmailNotFoundError,
@@ -24,11 +25,14 @@ class UserController:
 
     async def create_user(self, user_create: UserCreate) -> User:
         try:
+            hashing_password = get_password_hash(user_create.password)
+
             # Calculate initial stats based on the tribe
             initial_stats = self.calculate_initial_stats(user_create.tribe)
 
             # Create new user
             new_user = User(**user_create.model_dump(), **initial_stats)
+            new_user.password = hashing_password
             self.session.add(new_user)
             self.session.commit()
             self.session.refresh(new_user)
@@ -116,6 +120,11 @@ class UserController:
         if not user_with_items:
             raise UserUsernameNotFoundError(user_username=user_username)
         return self._construct_user_view(user_with_items)
+
+    async def get_user_by_username_with_password(self, user_username: str) -> User:
+        return self.session.exec(
+            select(User).where(User.username == user_username)
+        ).one()
 
     async def get_user_by_email(self, user_email: str) -> UserView:
         logger.info(f"Getting user by email: {user_email}")

@@ -1,7 +1,11 @@
+from typing import Annotated
 from uuid import UUID
 from fastapi import APIRouter, Depends
+
+from leveluplife.auth.utils import get_current_active_user
 from leveluplife.controllers.user import UserController
 from leveluplife.dependencies import get_user_controller
+from leveluplife.models.table import User
 from leveluplife.models.user import UserCreate, UserUpdate, UserUpdatePassword, Tribe
 from leveluplife.models.view import UserView
 
@@ -10,6 +14,13 @@ router = APIRouter(
     tags=["users"],
     responses={404: {"description": "Not found"}},
 )
+
+
+@router.get("/me/", response_model=User)
+async def read_users_me(
+    current_user: Annotated[User, Depends(get_current_active_user)],
+):
+    return current_user
 
 
 @router.post("/", response_model=UserView, status_code=201)
