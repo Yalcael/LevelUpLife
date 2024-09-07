@@ -4,6 +4,7 @@ import pytest
 from faker import Faker
 from sqlmodel import Session, select
 
+from leveluplife.auth.hash import verify_password
 from leveluplife.controllers.item import ItemController
 from leveluplife.controllers.user import UserController
 from leveluplife.models.error import (
@@ -79,7 +80,7 @@ async def test_create_user_nosferati(
     # Assert
     assert result.username == user_create.username == user.username
     assert result.email == user_create.email == user.email
-    assert result.password == user_create.password == user.password
+    assert verify_password(user_create.password, user.password)
     assert result.tribe == user_create.tribe == user.tribe
     assert result.intelligence == expected_stats["Nosferati"]["intelligence"]
     assert result.strength == expected_stats["Nosferati"]["strength"]
@@ -107,7 +108,7 @@ async def test_create_user_valhars(
     # Assert
     assert result.username == user_create.username == user.username
     assert result.email == user_create.email == user.email
-    assert result.password == user_create.password == user.password
+    assert verify_password(user_create.password, user.password)
     assert result.tribe == user_create.tribe == user.tribe
     assert result.intelligence == expected_stats["Valhars"]["intelligence"]
     assert result.strength == expected_stats["Valhars"]["strength"]
@@ -135,7 +136,7 @@ async def test_create_user_saharans(
     # Assert
     assert result.username == user_create.username == user.username
     assert result.email == user_create.email == user.email
-    assert result.password == user_create.password == user.password
+    assert verify_password(user_create.password, user.password)
     assert result.tribe == user_create.tribe == user.tribe
     assert result.intelligence == expected_stats["Saharans"]["intelligence"]
     assert result.strength == expected_stats["Saharans"]["strength"]
@@ -163,7 +164,7 @@ async def test_create_user_glimmerkins(
     # Assert
     assert result.username == user_create.username == user.username
     assert result.email == user_create.email == user.email
-    assert result.password == user_create.password == user.password
+    assert verify_password(user_create.password, user.password)
     assert result.tribe == user_create.tribe == user.tribe
     assert result.intelligence == expected_stats["Glimmerkins"]["intelligence"]
     assert result.strength == expected_stats["Glimmerkins"]["strength"]
@@ -191,7 +192,7 @@ async def test_create_user_neutrals(
     # Assert
     assert result.username == user_create.username == user.username
     assert result.email == user_create.email == user.email
-    assert result.password == user_create.password == user.password
+    assert verify_password(user_create.password, user.password)
     assert result.tribe == user_create.tribe == user.tribe
     assert result.intelligence == expected_stats["Neutrals"]["intelligence"]
     assert result.strength == expected_stats["Neutrals"]["strength"]
