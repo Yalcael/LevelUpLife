@@ -72,8 +72,7 @@ def get_rating_controller(session: Session) -> RatingController:
 @pytest.fixture(name="app")
 def get_test_app() -> FastAPI:
     app = create_app(lifespan=lifespan)
-    mock_token = "mock.jwt.token"
-    app.dependency_overrides[get_current_active_user] = lambda: mock_token
+    app.dependency_overrides[get_current_active_user] = lambda: "mock.jwt.token"
     return app
 
 
