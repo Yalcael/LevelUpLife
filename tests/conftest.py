@@ -7,6 +7,7 @@ from starlette.testclient import TestClient
 from testcontainers.postgres import PostgresContainer
 
 from leveluplife.api import create_app
+from leveluplife.auth.utils import get_current_active_user
 from leveluplife.controllers.item import ItemController
 from leveluplife.controllers.rating import RatingController
 from leveluplife.controllers.task import TaskController
@@ -70,7 +71,10 @@ def get_rating_controller(session: Session) -> RatingController:
 
 @pytest.fixture(name="app")
 def get_test_app() -> FastAPI:
-    return create_app(lifespan=lifespan)
+    app = create_app(lifespan=lifespan)
+    mock_token = "mock.jwt.token"
+    app.dependency_overrides[get_current_active_user] = lambda: mock_token
+    return app
 
 
 @pytest.fixture(name="client")
