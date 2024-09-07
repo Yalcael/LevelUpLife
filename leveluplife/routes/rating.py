@@ -3,6 +3,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends
 
+from leveluplife.auth.utils import get_current_active_user
 from leveluplife.controllers.rating import RatingController
 from leveluplife.dependencies import get_rating_controller
 from leveluplife.models.rating import RatingCreate, RatingUpdate
@@ -11,6 +12,7 @@ from leveluplife.models.view import RatingView
 router = APIRouter(
     prefix="/ratings",
     tags=["ratings"],
+    dependencies=[Depends(get_current_active_user)],
     responses={404: {"description": "Not found"}},
 )
 

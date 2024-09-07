@@ -32,7 +32,10 @@ async def create_user(
 
 @router.get("/", response_model=list[UserView])
 async def get_users(
-    *, offset: int = 0, user_controller: UserController = Depends(get_user_controller)
+    *,
+    offset: int = 0,
+    user_controller: UserController = Depends(get_user_controller),
+    current_user: User = Depends(get_current_active_user)
 ) -> list[UserView]:
     return [
         UserView.model_validate(user)
@@ -42,7 +45,10 @@ async def get_users(
 
 @router.get("/{user_id}", response_model=UserView)
 async def get_user_by_id(
-    *, user_id: UUID, user_controller: UserController = Depends(get_user_controller)
+    *,
+    user_id: UUID,
+    user_controller: UserController = Depends(get_user_controller),
+    current_user: User = Depends(get_current_active_user)
 ) -> UserView:
     return UserView.model_validate(await user_controller.get_user_by_id(user_id))
 
@@ -52,6 +58,7 @@ async def get_user_by_username(
     *,
     user_username: str,
     user_controller: UserController = Depends(get_user_controller),
+    current_user: User = Depends(get_current_active_user)
 ) -> UserView:
     return UserView.model_validate(
         await user_controller.get_user_by_username(user_username)
@@ -60,7 +67,10 @@ async def get_user_by_username(
 
 @router.get("/type/email", response_model=UserView)
 async def get_user_by_email(
-    *, user_email: str, user_controller: UserController = Depends(get_user_controller)
+    *,
+    user_email: str,
+    user_controller: UserController = Depends(get_user_controller),
+    current_user: User = Depends(get_current_active_user)
 ) -> UserView:
     return UserView.model_validate(await user_controller.get_user_by_email(user_email))
 
@@ -71,6 +81,7 @@ async def get_users_by_tribe(
     offset: int = 0,
     user_tribe: Tribe,
     user_controller: UserController = Depends(get_user_controller),
+    current_user: User = Depends(get_current_active_user)
 ) -> list[UserView]:
     users = await user_controller.get_users_by_tribe(user_tribe, offset * 20, 20)
     return [UserView.model_validate(user) for user in users]
@@ -82,6 +93,7 @@ async def update_user(
     user_id: UUID,
     user_update: UserUpdate,
     user_controller: UserController = Depends(get_user_controller),
+    current_user: User = Depends(get_current_active_user)
 ) -> UserView:
     return UserView.model_validate(
         await user_controller.update_user(user_id, user_update)
@@ -90,7 +102,10 @@ async def update_user(
 
 @router.delete("/{user_id}", status_code=204)
 async def delete_user(
-    *, user_id: UUID, user_controller: UserController = Depends(get_user_controller)
+    *,
+    user_id: UUID,
+    user_controller: UserController = Depends(get_user_controller),
+    current_user: User = Depends(get_current_active_user)
 ) -> None:
     await user_controller.delete_user(user_id)
 
@@ -101,6 +116,7 @@ async def update_user_password(
     user_id: UUID,
     user_update_password: UserUpdatePassword,
     user_controller: UserController = Depends(get_user_controller),
+    current_user: User = Depends(get_current_active_user)
 ) -> UserView:
     return UserView.model_validate(
         await user_controller.update_user_password(
@@ -115,6 +131,7 @@ async def equip_item_to_user(
     item_id: UUID,
     equipped: bool,
     user_controller: UserController = Depends(get_user_controller),
+    current_user: User = Depends(get_current_active_user),
 ) -> UserView:
     return UserView.model_validate(
         await user_controller.equip_item_to_user(user_id, item_id, equipped)

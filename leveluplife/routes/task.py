@@ -1,8 +1,7 @@
 from typing import Sequence
 from uuid import UUID
-
 from fastapi import APIRouter, Depends
-
+from leveluplife.auth.utils import get_current_active_user
 from leveluplife.controllers.task import TaskController
 from leveluplife.dependencies import get_task_controller
 from leveluplife.models.task import TaskCreate, TaskUpdate
@@ -11,6 +10,7 @@ from leveluplife.models.view import TaskView
 router = APIRouter(
     prefix="/tasks",
     tags=["tasks"],
+    dependencies=[Depends(get_current_active_user)],
     responses={404: {"description": "Not found"}},
 )
 

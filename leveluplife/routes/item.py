@@ -1,6 +1,8 @@
 from typing import Sequence
 from uuid import UUID
 from fastapi import APIRouter, Depends
+
+from leveluplife.auth.utils import get_current_active_user
 from leveluplife.controllers.item import ItemController
 from leveluplife.dependencies import get_item_controller
 from leveluplife.models.item import ItemCreate, ItemUpdate
@@ -10,6 +12,7 @@ from leveluplife.models.view import ItemView, ItemWithUser
 router = APIRouter(
     prefix="/items",
     tags=["items"],
+    dependencies=[Depends(get_current_active_user)],
     responses={404: {"description": "Not found"}},
 )
 
