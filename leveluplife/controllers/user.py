@@ -14,9 +14,15 @@ from leveluplife.models.error import (
     ItemLinkToUserNotFoundError,
 )
 from leveluplife.models.relationship import UserItemLink
-from leveluplife.models.table import User, Item, Task, Rating
+from leveluplife.models.table import User, Item, Task, Rating, Comment
 from leveluplife.models.user import Tribe, UserCreate, UserUpdate
-from leveluplife.models.view import TaskView, UserView, ItemUserView, RatingView
+from leveluplife.models.view import (
+    TaskView,
+    UserView,
+    ItemUserView,
+    RatingView,
+    CommentView,
+)
 
 
 class UserController:
@@ -98,11 +104,12 @@ class UserController:
     async def get_users(self, offset: int, limit: int) -> list[UserView]:
         logger.info("Getting users")
         user_with_items = self.session.exec(
-            select(User, UserItemLink, Item, Task, Rating)
+            select(User, UserItemLink, Item, Task, Rating, Comment)
             .join(UserItemLink, User.id == UserItemLink.user_id, isouter=True)
             .join(Item, UserItemLink.item_id == Item.id, isouter=True)
             .join(Task, User.id == Task.user_id, isouter=True)
             .join(Rating, User.id == Rating.user_id, isouter=True)
+            .join(Comment, User.id == Comment.user_id, isouter=True)
             .order_by(User.username)
             .offset(offset)
             .limit(limit)
@@ -143,11 +150,12 @@ class UserController:
     ) -> list[UserView]:
         logger.info(f"Getting users by tribe: {user_tribe}")
         user_with_items = self.session.exec(
-            select(User, UserItemLink, Item, Task, Rating)
+            select(User, UserItemLink, Item, Task, Rating, Comment)
             .join(UserItemLink, User.id == UserItemLink.user_id, isouter=True)
             .join(Item, UserItemLink.item_id == Item.id, isouter=True)
             .join(Task, User.id == Task.user_id, isouter=True)
             .join(Rating, User.id == Rating.user_id, isouter=True)
+            .join(Comment, User.id == Comment.user_id, isouter=True)
             .offset(offset)
             .limit(limit)
             .where(User.tribe == user_tribe)
@@ -265,13 +273,25 @@ class UserController:
                 )
                 for rating in user.ratings
             ],
+            comments=[
+                CommentView(
+                    **comment.model_dump(),
+                )
+                for comment in user.comments
+            ],
         )
 
     def _construct_user_views(self, user_with_items) -> list[UserView]:
         users = {}
-        for user, user_item_link, item, task, rating in user_with_items:
+        for user, user_item_link, item, task, rating, comment in user_with_items:
             if user.id not in users:
-                users[user.id] = {"user": user, "items": {}, "tasks": {}, "ratings": {}}
+                users[user.id] = {
+                    "user": user,
+                    "items": {},
+                    "tasks": {},
+                    "ratings": {},
+                    "comments": {},
+                }
 
             if user_item_link and item:
                 item_key = (item.id, user.id)
@@ -290,12 +310,19 @@ class UserController:
                         **rating.model_dump()
                     )
 
+            if comment:
+                if comment.id not in users[user.id]["comments"]:
+                    users[user.id]["comments"][comment.id] = CommentView(
+                        **comment.model_dump()
+                    )
+
         return [
             UserView(
                 **user_data["user"].model_dump(exclude={"password"}),
                 items=list(user_data["items"].values()),
                 tasks=list(user_data["tasks"].values()),
                 ratings=list(user_data["ratings"].values()),
+                comments=list(user_data["comments"].values()),
             )
             for user_data in users.values()
         ]

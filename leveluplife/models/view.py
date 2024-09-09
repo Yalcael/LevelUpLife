@@ -1,6 +1,7 @@
 from datetime import datetime
 from uuid import UUID
 
+from leveluplife.models.comment import CommentBase
 from leveluplife.models.item import ItemBase
 from leveluplife.models.rating import RatingBase
 from leveluplife.models.table import User
@@ -20,6 +21,7 @@ class UserView(UserBase):
     items: list["ItemUserView"] = []
     tasks: list["TaskView"] = []
     ratings: list["RatingView"] = []
+    comments: list["CommentView"] = []
 
 
 class TaskView(TaskBase):
@@ -45,3 +47,10 @@ class ItemWithUser(ItemView):
 class RatingView(RatingBase):
     id: UUID
     created_at: datetime
+
+
+class CommentView(CommentBase):
+    id: UUID
+    created_at: datetime
+    updated_at: datetime | None = None
+    deleted_at: datetime | None = None

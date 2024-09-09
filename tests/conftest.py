@@ -8,6 +8,7 @@ from testcontainers.postgres import PostgresContainer
 
 from leveluplife.api import create_app
 from leveluplife.auth.utils import get_current_active_user
+from leveluplife.controllers.comment import CommentController
 from leveluplife.controllers.item import ItemController
 from leveluplife.controllers.rating import RatingController
 from leveluplife.controllers.task import TaskController
@@ -67,6 +68,11 @@ def get_item_controller(session: Session) -> ItemController:
 @pytest.fixture(name="rating_controller")
 def get_rating_controller(session: Session) -> RatingController:
     return RatingController(session)
+
+
+@pytest.fixture(name="comment_controller")
+def get_comment_controller(session: Session) -> CommentController:
+    return CommentController(session)
 
 
 @pytest.fixture(name="app")

@@ -1,6 +1,7 @@
 from fastapi import Depends
 from sqlmodel import Session
 
+from leveluplife.controllers.comment import CommentController
 from leveluplife.controllers.item import ItemController
 from leveluplife.controllers.rating import RatingController
 from leveluplife.controllers.task import TaskController
@@ -28,3 +29,9 @@ def get_item_controller(session: Session = Depends(get_session)) -> ItemControll
 
 def get_rating_controller(session: Session = Depends(get_session)) -> RatingController:
     return RatingController(session)
+
+
+def get_comment_controller(
+    session: Session = Depends(get_session),
+) -> CommentController:
+    return CommentController(session)

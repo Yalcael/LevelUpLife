@@ -49,7 +49,7 @@ async def get_rating_by_id(
 
 
 @router.patch("/{rating_id}", response_model=RatingView)
-async def update_task(
+async def update_rating(
     *,
     rating_id: UUID,
     rating_update: RatingUpdate,

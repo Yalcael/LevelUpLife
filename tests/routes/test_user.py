@@ -65,6 +65,7 @@ async def test_create_user(
         "wise": mock_user.wise,
         "tasks": [],
         "ratings": [],
+        "comments": [],
     }
 
 
@@ -174,6 +175,7 @@ async def test_get_users(
             "wise": user.wise,
             "tasks": [],
             "ratings": [],
+            "comments": [],
         }
         for user in mock_users
     ]
@@ -219,6 +221,7 @@ async def test_get_user_by_id(
         "wise": 0,
         "tasks": [],
         "ratings": [],
+        "comments": [],
     }
 
 
@@ -287,6 +290,7 @@ async def test_get_user_by_username(
         "wise": 0,
         "tasks": [],
         "ratings": [],
+        "comments": [],
     }
 
 
@@ -357,6 +361,7 @@ async def test_get_user_by_email(
         "wise": 0,
         "tasks": [],
         "ratings": [],
+        "comments": [],
     }
 
 
@@ -445,6 +450,7 @@ async def test_get_users_by_tribe(
             "wise": user.wise,
             "tasks": [],
             "ratings": [],
+            "comments": [],
         }
         for user in mock_users
         if user.tribe == Tribe.NOSFERATI
@@ -496,6 +502,7 @@ async def test_update_user(
         "wise": updated_user.wise,
         "tasks": [],
         "ratings": [],
+        "comments": [],
     }
 
 
@@ -598,6 +605,7 @@ async def test_update_user_password(
         "experience": updated_user.experience,
         "tasks": [],
         "ratings": [],
+        "comments": [],
     }
 
 
@@ -690,4 +698,5 @@ async def test_equip_item_to_user(
         "wise": mock_user.wise,
         "tasks": [],
         "ratings": [],
+        "comments": [],
     }
