@@ -2,21 +2,21 @@ import pytest
 from faker import Faker
 from sqlmodel import Session, select
 
-from leveluplife.controllers.rating import RatingController
+from leveluplife.controllers.comment import CommentController
 from leveluplife.controllers.task import TaskController
 from leveluplife.controllers.user import UserController
-from leveluplife.models.error import RatingAlreadyExistsError, RatingNotFoundError
-from leveluplife.models.rating import RatingCreate, RatingUpdate
-from leveluplife.models.table import Rating
+from leveluplife.models.comment import CommentCreate, CommentUpdate
+from leveluplife.models.error import CommentAlreadyExistsError, CommentNotFoundError
+from leveluplife.models.table import Comment
 from leveluplife.models.task import TaskCreate
-from leveluplife.models.user import Tribe, UserCreate
+from leveluplife.models.user import UserCreate, Tribe
 
 
 @pytest.mark.asyncio
-async def test_create_rating(
+async def test_create_comment(
     task_controller: TaskController,
     user_controller: UserController,
-    rating_controller: RatingController,
+    comment_controller: CommentController,
     session: Session,
     faker: Faker,
 ) -> None:
@@ -38,28 +38,28 @@ async def test_create_rating(
     )
     task = await task_controller.create_task(task_create)
 
-    rating_create = RatingCreate(
+    comment_create = CommentCreate(
         task_id=task.id,
         user_id=user.id,
-        rating=faker.random_int(min=0, max=10),
+        content=faker.text(max_nb_chars=800),
     )
 
     # Act
-    result = await rating_controller.create_rating(rating_create)
+    result = await comment_controller.create_comment(comment_create)
 
-    rating = session.exec(select(Rating).where(Rating.id == result.id)).one()
+    comment = session.exec(select(Comment).where(Comment.id == result.id)).one()
 
     # Assert
-    assert result.rating == rating_create.rating == rating.rating
-    assert result.task_id == rating_create.task_id == rating.task_id
-    assert result.user_id == rating_create.user_id == rating.user_id
+    assert result.content == comment_create.content == comment.content
+    assert result.task_id == comment_create.task_id == comment.task_id
+    assert result.user_id == comment_create.user_id == comment.user_id
 
 
 @pytest.mark.asyncio
-async def test_create_rating_already_exists_error(
+async def test_create_comment_already_exists_error(
     task_controller: TaskController,
     user_controller: UserController,
-    rating_controller: RatingController,
+    comment_controller: CommentController,
     faker: Faker,
 ) -> None:
     user_create = UserCreate(
@@ -79,23 +79,23 @@ async def test_create_rating_already_exists_error(
     )
     task = await task_controller.create_task(task_create)
 
-    rating_create = RatingCreate(
+    comment_create = CommentCreate(
         task_id=task.id,
         user_id=user.id,
-        rating=faker.random_int(min=0, max=10),
+        content=faker.text(max_nb_chars=800),
     )
 
     # Act
-    await rating_controller.create_rating(rating_create)
+    await comment_controller.create_comment(comment_create)
 
     # Assert
-    with pytest.raises(RatingAlreadyExistsError):
-        await rating_controller.create_rating(rating_create)
+    with pytest.raises(CommentAlreadyExistsError):
+        await comment_controller.create_comment(comment_create)
 
 
 @pytest.mark.asyncio
-async def test_get_ratings(
-    rating_controller: RatingController,
+async def test_get_comments(
+    comment_controller: CommentController,
     user_controller: UserController,
     task_controller: TaskController,
     faker: Faker,
@@ -108,9 +108,9 @@ async def test_get_ratings(
     )
     user = await user_controller.create_user(user_create)
 
-    number_ratings = 5
-    created_ratings = []
-    for _ in range(number_ratings):
+    number_comments = 5
+    created_comments = []
+    for _ in range(number_comments):
         task_create = TaskCreate(
             title=faker.unique.word(),
             description=faker.text(max_nb_chars=400),
@@ -120,29 +120,29 @@ async def test_get_ratings(
         )
         task = await task_controller.create_task(task_create)
 
-        rating_create = RatingCreate(
+        comment_create = CommentCreate(
             task_id=task.id,
             user_id=user.id,
-            rating=faker.random_int(min=0, max=10),
+            content=faker.text(max_nb_chars=800),
         )
-        created_rating = await rating_controller.create_rating(rating_create)
-        created_ratings.append(created_rating)
+        created_comment = await comment_controller.create_comment(comment_create)
+        created_comments.append(created_comment)
 
-    all_ratings = await rating_controller.get_ratings(offset=0 * 20, limit=20)
+    all_comments = await comment_controller.get_comments(offset=0 * 20, limit=20)
 
-    assert len(all_ratings) == number_ratings
+    assert len(all_comments) == number_comments
 
-    for i, created_rating in enumerate(created_ratings):
-        assert all_ratings[i].task_id == created_rating.task_id
-        assert all_ratings[i].user_id == created_rating.user_id
-        assert all_ratings[i].rating == created_rating.rating
+    for i, created_comment in enumerate(created_comments):
+        assert all_comments[i].task_id == created_comment.task_id
+        assert all_comments[i].user_id == created_comment.user_id
+        assert all_comments[i].content == created_comment.content
 
 
 @pytest.mark.asyncio
-async def test_get_rating_by_id(
+async def test_get_comment_by_id(
     task_controller: TaskController,
     user_controller: UserController,
-    rating_controller: RatingController,
+    comment_controller: CommentController,
     faker: Faker,
 ) -> None:
     user_create = UserCreate(
@@ -162,33 +162,33 @@ async def test_get_rating_by_id(
     )
     task = await task_controller.create_task(task_create)
 
-    rating_create = RatingCreate(
+    comment_create = CommentCreate(
         task_id=task.id,
         user_id=user.id,
-        rating=faker.random_int(min=0, max=10),
+        content=faker.text(max_nb_chars=800),
     )
-    created_rating = await rating_controller.create_rating(rating_create)
+    created_comment = await comment_controller.create_comment(comment_create)
 
-    retrieved_rating = await rating_controller.get_rating_by_id(created_rating.id)
+    retrieved_comment = await comment_controller.get_comment_by_id(created_comment.id)
 
-    assert retrieved_rating.task_id == created_rating.task_id
-    assert retrieved_rating.user_id == created_rating.user_id
-    assert retrieved_rating.rating == created_rating.rating
+    assert retrieved_comment.task_id == created_comment.task_id
+    assert retrieved_comment.user_id == created_comment.user_id
+    assert retrieved_comment.content == created_comment.content
 
 
 @pytest.mark.asyncio
-async def test_get_rating_by_id_raise_rating_not_found_error(
-    rating_controller: RatingController,
+async def test_get_comment_by_id_raise_comment_not_found_error(
+    comment_controller: CommentController,
     faker: Faker,
 ) -> None:
-    non_existent_rating_id = faker.uuid4()
-    with pytest.raises(RatingNotFoundError):
-        await rating_controller.get_rating_by_id(non_existent_rating_id)
+    non_existent_comment_id = faker.uuid4()
+    with pytest.raises(CommentNotFoundError):
+        await comment_controller.get_comment_by_id(non_existent_comment_id)
 
 
 @pytest.mark.asyncio
-async def test_update_rating(
-    rating_controller: RatingController,
+async def test_update_comment(
+    comment_controller: CommentController,
     user_controller: UserController,
     task_controller: TaskController,
     faker: Faker,
@@ -210,50 +210,50 @@ async def test_update_rating(
     )
     task = await task_controller.create_task(task_create)
 
-    rating_create = RatingCreate(
+    comment_create = CommentCreate(
         task_id=task.id,
         user_id=user.id,
-        rating=faker.random_int(min=0, max=10),
+        content=faker.text(max_nb_chars=800),
     )
-    created_rating = await rating_controller.create_rating(rating_create)
+    created_comment = await comment_controller.create_comment(comment_create)
 
-    rating_update = RatingUpdate(
-        rating=faker.random_int(min=0, max=10),
-    )
-
-    updated_rating = await rating_controller.update_rating(
-        created_rating.id, rating_update
+    comment_update = CommentUpdate(
+        content=faker.text(max_nb_chars=800),
     )
 
-    assert updated_rating.id == created_rating.id
-    assert updated_rating.task_id == created_rating.task_id
-    assert updated_rating.user_id == created_rating.user_id
-    assert updated_rating.rating == rating_update.rating
+    updated_comment = await comment_controller.update_comment(
+        created_comment.id, comment_update
+    )
+
+    assert updated_comment.id == created_comment.id
+    assert updated_comment.task_id == created_comment.task_id
+    assert updated_comment.user_id == created_comment.user_id
+    assert updated_comment.content == created_comment.content
 
 
 @pytest.mark.asyncio
-async def test_update_rating_raise_rating_not_found_error(
-    rating_controller: RatingController, faker: Faker
+async def test_update_comment_raise_comment_not_found_error(
+    comment_controller: CommentController, faker: Faker
 ) -> None:
-    rating_update = RatingUpdate(
-        rating=faker.random_int(min=0, max=10),
+    comment_update = CommentUpdate(
+        content=faker.text(max_nb_chars=800),
     )
 
-    nonexistent_rating_id = faker.uuid4()
+    nonexistent_comment_id = faker.uuid4()
 
-    with pytest.raises(RatingNotFoundError):
-        await rating_controller.update_rating(nonexistent_rating_id, rating_update)
+    with pytest.raises(CommentNotFoundError):
+        await comment_controller.update_comment(nonexistent_comment_id, comment_update)
 
 
 @pytest.mark.asyncio
-async def test_delete_rating(
-    rating_controller: RatingController,
+async def test_delete_comment(
+    comment_controller: CommentController,
     user_controller: UserController,
     task_controller: TaskController,
     faker: Faker,
 ) -> None:
     user_create = UserCreate(
-        username=faker.unique.user_name()[:18],
+        username=faker.unique.user_name(),
         email=faker.unique.email(),
         password=faker.password(),
         tribe=Tribe.NOSFERATI,
@@ -269,24 +269,24 @@ async def test_delete_rating(
     )
     task = await task_controller.create_task(task_create)
 
-    rating_create = RatingCreate(
+    comment_create = CommentCreate(
         task_id=task.id,
         user_id=user.id,
-        rating=faker.random_int(min=0, max=10),
+        content=faker.text(max_nb_chars=800),
     )
-    created_rating = await rating_controller.create_rating(rating_create)
+    created_comment = await comment_controller.create_comment(comment_create)
 
-    await rating_controller.delete_rating(created_rating.id)
+    await comment_controller.delete_comment(created_comment.id)
 
-    with pytest.raises(RatingNotFoundError):
-        await rating_controller.delete_rating(created_rating.id)
+    with pytest.raises(CommentNotFoundError):
+        await comment_controller.delete_comment(created_comment.id)
 
 
 @pytest.mark.asyncio
-async def test_delete_rating_raise_rating_not_found_error(
-    rating_controller: RatingController, faker: Faker
+async def test_delete_comment_raise_comment_not_found_error(
+    comment_controller: CommentController, faker: Faker
 ) -> None:
-    nonexistent_rating_id = faker.uuid4()
+    nonexistent_comment_id = faker.uuid4()
 
-    with pytest.raises(RatingNotFoundError):
-        await rating_controller.delete_rating(nonexistent_rating_id)
+    with pytest.raises(CommentNotFoundError):
+        await comment_controller.delete_comment(nonexistent_comment_id)
