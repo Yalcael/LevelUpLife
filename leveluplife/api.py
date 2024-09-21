@@ -12,6 +12,7 @@ from leveluplife.routes.user import router as user_router
 from leveluplife.routes.rating import router as rating_router
 from leveluplife.routes.auth import router as auth_router
 from leveluplife.routes.comment import router as comment_router
+from leveluplife.routes.reaction import router as reaction_router
 
 
 def create_app(lifespan) -> FastAPI:
@@ -31,6 +32,7 @@ def create_app(lifespan) -> FastAPI:
     app.include_router(rating_router)
     app.include_router(auth_router)
     app.include_router(comment_router)
+    app.include_router(reaction_router)
 
     @app.exception_handler(BaseError)
     async def exception_handler(request: Request, exc: BaseError) -> JSONResponse:

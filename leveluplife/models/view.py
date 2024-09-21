@@ -4,6 +4,7 @@ from uuid import UUID
 from leveluplife.models.comment import CommentBase
 from leveluplife.models.item import ItemBase
 from leveluplife.models.rating import RatingBase
+from leveluplife.models.reaction import ReactionBase
 from leveluplife.models.table import User
 from leveluplife.models.task import TaskBase
 from leveluplife.models.user import UserBase
@@ -22,6 +23,7 @@ class UserView(UserBase):
     tasks: list["TaskView"] = []
     ratings: list["RatingView"] = []
     comments: list["CommentView"] = []
+    reactions: list["ReactionView"] = []
 
 
 class TaskView(TaskBase):
@@ -50,6 +52,13 @@ class RatingView(RatingBase):
 
 
 class CommentView(CommentBase):
+    id: UUID
+    created_at: datetime
+    updated_at: datetime | None = None
+    deleted_at: datetime | None = None
+
+
+class ReactionView(ReactionBase):
     id: UUID
     created_at: datetime
     updated_at: datetime | None = None

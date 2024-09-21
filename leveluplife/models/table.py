@@ -6,6 +6,7 @@ from sqlmodel import Field, Relationship
 from leveluplife.models.comment import CommentBase
 from leveluplife.models.item import ItemBase
 from leveluplife.models.rating import RatingBase
+from leveluplife.models.reaction import ReactionBase
 from leveluplife.models.relationship import UserItemLink
 from leveluplife.models.task import TaskBase
 from leveluplife.models.user import UserBase
@@ -25,6 +26,7 @@ class User(UserBase, table=True):
     items: list["Item"] = Relationship(back_populates="users", link_model=UserItemLink)
     ratings: list["Rating"] = Relationship(back_populates="user")
     comments: list["Comment"] = Relationship(back_populates="user")
+    reactions: list["Reaction"] = Relationship(back_populates="user")
 
 
 class Task(TaskBase, table=True):
@@ -33,6 +35,7 @@ class Task(TaskBase, table=True):
     user: User | None = Relationship(back_populates="tasks")
     ratings: list["Rating"] = Relationship(back_populates="task")
     comments: list["Comment"] = Relationship(back_populates="task")
+    reactions: list["Reaction"] = Relationship(back_populates="task")
 
 
 class Item(ItemBase, table=True):
@@ -57,3 +60,12 @@ class Comment(CommentBase, table=True):
     deleted_at: datetime | None = Field(default=None)
     user: User | None = Relationship(back_populates="comments")
     task: Task | None = Relationship(back_populates="comments")
+
+
+class Reaction(ReactionBase, table=True):
+    id: UUID | None = Field(default_factory=uuid4, primary_key=True, unique=True)
+    created_at: datetime = Field(default_factory=lambda: datetime.now())
+    updated_at: datetime | None = Field(default=None)
+    deleted_at: datetime | None = Field(default=None)
+    user: User | None = Relationship(back_populates="reactions")
+    task: Task | None = Relationship(back_populates="reactions")

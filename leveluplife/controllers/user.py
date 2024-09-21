@@ -14,7 +14,7 @@ from leveluplife.models.error import (
     ItemLinkToUserNotFoundError,
 )
 from leveluplife.models.relationship import UserItemLink
-from leveluplife.models.table import User, Item, Task, Rating, Comment
+from leveluplife.models.table import User, Item, Task, Rating, Comment, Reaction
 from leveluplife.models.user import Tribe, UserCreate, UserUpdate
 from leveluplife.models.view import (
     TaskView,
@@ -22,6 +22,7 @@ from leveluplife.models.view import (
     ItemUserView,
     RatingView,
     CommentView,
+    ReactionView,
 )
 
 
@@ -104,12 +105,13 @@ class UserController:
     async def get_users(self, offset: int, limit: int) -> list[UserView]:
         logger.info("Getting users")
         user_with_items = self.session.exec(
-            select(User, UserItemLink, Item, Task, Rating, Comment)
+            select(User, UserItemLink, Item, Task, Rating, Comment, Reaction)
             .join(UserItemLink, User.id == UserItemLink.user_id, isouter=True)
             .join(Item, UserItemLink.item_id == Item.id, isouter=True)
             .join(Task, User.id == Task.user_id, isouter=True)
             .join(Rating, User.id == Rating.user_id, isouter=True)
             .join(Comment, User.id == Comment.user_id, isouter=True)
+            .join(Reaction, User.id == Reaction.user_id, isouter=True)
             .order_by(User.username)
             .offset(offset)
             .limit(limit)
@@ -150,12 +152,13 @@ class UserController:
     ) -> list[UserView]:
         logger.info(f"Getting users by tribe: {user_tribe}")
         user_with_items = self.session.exec(
-            select(User, UserItemLink, Item, Task, Rating, Comment)
+            select(User, UserItemLink, Item, Task, Rating, Comment, Reaction)
             .join(UserItemLink, User.id == UserItemLink.user_id, isouter=True)
             .join(Item, UserItemLink.item_id == Item.id, isouter=True)
             .join(Task, User.id == Task.user_id, isouter=True)
             .join(Rating, User.id == Rating.user_id, isouter=True)
             .join(Comment, User.id == Comment.user_id, isouter=True)
+            .join(Reaction, User.id == Reaction.user_id, isouter=True)
             .offset(offset)
             .limit(limit)
             .where(User.tribe == user_tribe)
@@ -279,11 +282,25 @@ class UserController:
                 )
                 for comment in user.comments
             ],
+            reactions=[
+                ReactionView(
+                    **reaction.model_dump(),
+                )
+                for reaction in user.reactions
+            ],
         )
 
     def _construct_user_views(self, user_with_items) -> list[UserView]:
         users = {}
-        for user, user_item_link, item, task, rating, comment in user_with_items:
+        for (
+            user,
+            user_item_link,
+            item,
+            task,
+            rating,
+            comment,
+            reaction,
+        ) in user_with_items:
             if user.id not in users:
                 users[user.id] = {
                     "user": user,
@@ -291,6 +308,7 @@ class UserController:
                     "tasks": {},
                     "ratings": {},
                     "comments": {},
+                    "reactions": {},
                 }
 
             if user_item_link and item:
@@ -316,6 +334,12 @@ class UserController:
                         **comment.model_dump()
                     )
 
+            if reaction:
+                if reaction.id not in users[user.id]["reactions"]:
+                    users[user.id]["reactions"][reaction.id] = ReactionView(
+                        **reaction.model_dump()
+                    )
+
         return [
             UserView(
                 **user_data["user"].model_dump(exclude={"password"}),
@@ -323,6 +347,7 @@ class UserController:
                 tasks=list(user_data["tasks"].values()),
                 ratings=list(user_data["ratings"].values()),
                 comments=list(user_data["comments"].values()),
+                reactions=list(user_data["reactions"].values()),
             )
             for user_data in users.values()
         ]

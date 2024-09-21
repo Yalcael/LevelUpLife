@@ -11,6 +11,7 @@ from leveluplife.auth.utils import get_current_active_user
 from leveluplife.controllers.comment import CommentController
 from leveluplife.controllers.item import ItemController
 from leveluplife.controllers.rating import RatingController
+from leveluplife.controllers.reaction import ReactionController
 from leveluplife.controllers.task import TaskController
 from leveluplife.controllers.user import UserController
 from main import lifespan
@@ -73,6 +74,11 @@ def get_rating_controller(session: Session) -> RatingController:
 @pytest.fixture(name="comment_controller")
 def get_comment_controller(session: Session) -> CommentController:
     return CommentController(session)
+
+
+@pytest.fixture(name="reaction_controller")
+def get_reaction_controller(session: Session) -> ReactionController:
+    return ReactionController(session)
 
 
 @pytest.fixture(name="app")
