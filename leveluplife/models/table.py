@@ -5,9 +5,10 @@ from sqlmodel import Field, Relationship
 
 from leveluplife.models.comment import CommentBase
 from leveluplife.models.item import ItemBase
+from leveluplife.models.quest import QuestBase
 from leveluplife.models.rating import RatingBase
 from leveluplife.models.reaction import ReactionBase
-from leveluplife.models.relationship import UserItemLink
+from leveluplife.models.relationship import UserItemLink, UserQuestLink
 from leveluplife.models.task import TaskBase
 from leveluplife.models.user import UserBase
 
@@ -27,6 +28,9 @@ class User(UserBase, table=True):
     ratings: list["Rating"] = Relationship(back_populates="user")
     comments: list["Comment"] = Relationship(back_populates="user")
     reactions: list["Reaction"] = Relationship(back_populates="user")
+    quests: list["Quest"] = Relationship(
+        back_populates="users", link_model=UserQuestLink
+    )
 
 
 class Task(TaskBase, table=True):
@@ -69,3 +73,13 @@ class Reaction(ReactionBase, table=True):
     deleted_at: datetime | None = Field(default=None)
     user: User | None = Relationship(back_populates="reactions")
     task: Task | None = Relationship(back_populates="reactions")
+
+
+class Quest(QuestBase, table=True):
+    id: UUID | None = Field(default_factory=uuid4, primary_key=True, unique=True)
+    created_at: datetime = Field(default_factory=lambda: datetime.now())
+    updated_at: datetime | None = Field(default=None)
+    deleted_at: datetime | None = Field(default=None)
+    users: list["User"] = Relationship(
+        back_populates="quests", link_model=UserQuestLink
+    )

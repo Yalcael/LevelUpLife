@@ -13,8 +13,8 @@ from leveluplife.models.error import (
     UserUsernameNotFoundError,
     ItemLinkToUserNotFoundError,
 )
-from leveluplife.models.relationship import UserItemLink
-from leveluplife.models.table import User, Item, Task, Rating, Comment, Reaction
+from leveluplife.models.relationship import UserItemLink, UserQuestLink
+from leveluplife.models.table import User, Item, Task, Rating, Comment, Reaction, Quest
 from leveluplife.models.user import Tribe, UserCreate, UserUpdate
 from leveluplife.models.view import (
     TaskView,
@@ -23,6 +23,7 @@ from leveluplife.models.view import (
     RatingView,
     CommentView,
     ReactionView,
+    QuestUserView,
 )
 
 
@@ -105,13 +106,25 @@ class UserController:
     async def get_users(self, offset: int, limit: int) -> list[UserView]:
         logger.info("Getting users")
         user_with_items = self.session.exec(
-            select(User, UserItemLink, Item, Task, Rating, Comment, Reaction)
+            select(
+                User,
+                UserItemLink,
+                Item,
+                Task,
+                Rating,
+                Comment,
+                Reaction,
+                UserQuestLink,
+                Quest,
+            )
             .join(UserItemLink, User.id == UserItemLink.user_id, isouter=True)
             .join(Item, UserItemLink.item_id == Item.id, isouter=True)
             .join(Task, User.id == Task.user_id, isouter=True)
             .join(Rating, User.id == Rating.user_id, isouter=True)
             .join(Comment, User.id == Comment.user_id, isouter=True)
             .join(Reaction, User.id == Reaction.user_id, isouter=True)
+            .join(UserQuestLink, User.id == UserQuestLink.user_id, isouter=True)
+            .join(Quest, UserQuestLink.quest_id == Quest.id, isouter=True)
             .order_by(User.username)
             .offset(offset)
             .limit(limit)
@@ -121,9 +134,11 @@ class UserController:
     async def get_user_by_username(self, user_username: str) -> UserView:
         logger.info(f"Getting user by username: {user_username}")
         user_with_items = self.session.exec(
-            select(User, UserItemLink, Item)
+            select(User, UserItemLink, Item, UserQuestLink, Quest)
             .join(UserItemLink, User.id == UserItemLink.user_id, isouter=True)
             .join(Item, UserItemLink.item_id == Item.id, isouter=True)
+            .join(UserQuestLink, User.id == UserQuestLink.user_id, isouter=True)
+            .join(Quest, UserQuestLink.quest_id == Quest.id, isouter=True)
             .where(User.username == user_username)
         ).all()
         if not user_with_items:
@@ -138,9 +153,11 @@ class UserController:
     async def get_user_by_email(self, user_email: str) -> UserView:
         logger.info(f"Getting user by email: {user_email}")
         user_with_items = self.session.exec(
-            select(User, UserItemLink, Item)
+            select(User, UserItemLink, Item, UserQuestLink, Quest)
             .join(UserItemLink, User.id == UserItemLink.user_id, isouter=True)
             .join(Item, UserItemLink.item_id == Item.id, isouter=True)
+            .join(UserQuestLink, User.id == UserQuestLink.user_id, isouter=True)
+            .join(Quest, UserQuestLink.quest_id == Quest.id, isouter=True)
             .where(User.email == user_email)
         ).all()
         if not user_with_items:
@@ -152,13 +169,25 @@ class UserController:
     ) -> list[UserView]:
         logger.info(f"Getting users by tribe: {user_tribe}")
         user_with_items = self.session.exec(
-            select(User, UserItemLink, Item, Task, Rating, Comment, Reaction)
+            select(
+                User,
+                UserItemLink,
+                Item,
+                Task,
+                Rating,
+                Comment,
+                Reaction,
+                UserQuestLink,
+                Quest,
+            )
             .join(UserItemLink, User.id == UserItemLink.user_id, isouter=True)
             .join(Item, UserItemLink.item_id == Item.id, isouter=True)
             .join(Task, User.id == Task.user_id, isouter=True)
             .join(Rating, User.id == Rating.user_id, isouter=True)
             .join(Comment, User.id == Comment.user_id, isouter=True)
             .join(Reaction, User.id == Reaction.user_id, isouter=True)
+            .join(UserQuestLink, User.id == UserQuestLink.user_id, isouter=True)
+            .join(Quest, UserQuestLink.quest_id == Quest.id, isouter=True)
             .offset(offset)
             .limit(limit)
             .where(User.tribe == user_tribe)
@@ -176,9 +205,11 @@ class UserController:
             self.session.refresh(db_user)
             logger.info(f"Updated user: {db_user.username}")
             user_with_items = self.session.exec(
-                select(User, UserItemLink, Item)
+                select(User, UserItemLink, Item, UserQuestLink, Quest)
                 .join(UserItemLink, User.id == UserItemLink.user_id, isouter=True)
                 .join(Item, UserItemLink.item_id == Item.id, isouter=True)
+                .join(UserQuestLink, User.id == UserQuestLink.user_id, isouter=True)
+                .join(Quest, UserQuestLink.quest_id == Quest.id, isouter=True)
                 .where(User.id == db_user.id)
             ).all()
             return self._construct_user_view(user_with_items)
@@ -203,9 +234,11 @@ class UserController:
             self.session.refresh(db_user)
             logger.info(f"Updated user password: {db_user.username}")
             user_with_items = self.session.exec(
-                select(User, UserItemLink, Item)
+                select(User, UserItemLink, Item, UserQuestLink, Quest)
                 .join(UserItemLink, User.id == UserItemLink.user_id, isouter=True)
                 .join(Item, UserItemLink.item_id == Item.id, isouter=True)
+                .join(UserQuestLink, User.id == UserQuestLink.user_id, isouter=True)
+                .join(Quest, UserQuestLink.quest_id == Quest.id, isouter=True)
                 .where(User.id == db_user.id)
             ).all()
             return self._construct_user_view(user_with_items)
@@ -238,9 +271,11 @@ class UserController:
 
     async def get_user_by_id(self, user_id: UUID) -> UserView:
         user_with_items = self.session.exec(
-            select(User, UserItemLink, Item)
+            select(User, UserItemLink, Item, UserQuestLink, Quest)
             .join(UserItemLink, User.id == UserItemLink.user_id, isouter=True)
             .join(Item, UserItemLink.item_id == Item.id, isouter=True)
+            .join(UserQuestLink, User.id == UserQuestLink.user_id, isouter=True)
+            .join(Quest, UserQuestLink.quest_id == Quest.id, isouter=True)
             .where(User.id == user_id)
         ).all()
 
@@ -249,20 +284,35 @@ class UserController:
 
         return self._construct_user_view(user_with_items)
 
-    def _construct_user_view(self, user_with_items) -> UserView:
-        user, _, _ = user_with_items[0]
+    def _construct_user_view(self, user_with_items_and_quests) -> UserView:
+        user, user_item_link, item, user_quest_link, quest = user_with_items_and_quests[
+            0
+        ]
 
         user_items = [
             ItemUserView(
                 **item.model_dump(),
                 equipped=user_item_link.equipped,
             )
-            for _, user_item_link, item in user_with_items
+            for _, user_item_link, item, _, _ in user_with_items_and_quests
             if item
+        ]
+
+        user_quests = [
+            QuestUserView(
+                **quest.model_dump(),
+                user_id=user.id,
+                quest_start=user_quest_link.quest_start,
+                quest_end=user_quest_link.quest_end,
+                status=user_quest_link.status,
+            )
+            for _, _, _, user_quest_link, quest in user_with_items_and_quests
+            if quest
         ]
 
         return UserView(
             items=user_items,
+            quests=user_quests,
             **user.model_dump(exclude={"password"}),
             tasks=[
                 TaskView(
@@ -290,7 +340,7 @@ class UserController:
             ],
         )
 
-    def _construct_user_views(self, user_with_items) -> list[UserView]:
+    def _construct_user_views(self, user_with_items_and_quests) -> list[UserView]:
         users = {}
         for (
             user,
@@ -300,7 +350,9 @@ class UserController:
             rating,
             comment,
             reaction,
-        ) in user_with_items:
+            user_quest_link,
+            quest,
+        ) in user_with_items_and_quests:
             if user.id not in users:
                 users[user.id] = {
                     "user": user,
@@ -309,6 +361,7 @@ class UserController:
                     "ratings": {},
                     "comments": {},
                     "reactions": {},
+                    "quests": {},
                 }
 
             if user_item_link and item:
@@ -340,6 +393,17 @@ class UserController:
                         **reaction.model_dump()
                     )
 
+            if user_quest_link and quest:
+                quest_key = (quest.id, user.id)
+                if quest_key not in users[user.id]["quests"]:
+                    users[user.id]["quests"][quest_key] = QuestUserView(
+                        user_id=user.id,
+                        quest_start=user_quest_link.quest_start,
+                        quest_end=user_quest_link.quest_end,
+                        status=user_quest_link.status,
+                        **quest.model_dump(),
+                    )
+
         return [
             UserView(
                 **user_data["user"].model_dump(exclude={"password"}),
@@ -348,6 +412,7 @@ class UserController:
                 ratings=list(user_data["ratings"].values()),
                 comments=list(user_data["comments"].values()),
                 reactions=list(user_data["reactions"].values()),
+                quests=list(user_data["quests"].values()),
             )
             for user_data in users.values()
         ]

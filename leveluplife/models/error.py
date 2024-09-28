@@ -293,3 +293,27 @@ class ReactionNotFoundError(BaseError):
         super().__init__(
             name=self.name, message=self.message, status_code=self.status_code
         )
+
+
+class QuestAlreadyExistsError(BaseError):
+    def __init__(
+        self, _name: str, status_code: int = 409, name: str = "QuestAlreadyExistsError"
+    ):
+        self.name = name
+        self.message = f"Quest with the name {_name} already exists."
+        self.status_code = status_code
+        super().__init__(
+            name=self.name, message=self.message, status_code=self.status_code
+        )
+
+
+class QuestNotFoundError(BaseError):
+    def __init__(
+        self, quest_id: UUID, status_code: int = 404, name: str = "QuestNotFoundError"
+    ):
+        self.name = name
+        self.message = f"Quest with ID {quest_id} not found"
+        self.status_code = status_code
+        super().__init__(
+            name=self.name, message=self.message, status_code=self.status_code
+        )

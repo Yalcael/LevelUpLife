@@ -3,8 +3,10 @@ from uuid import UUID
 
 from leveluplife.models.comment import CommentBase
 from leveluplife.models.item import ItemBase
+from leveluplife.models.quest import QuestBase
 from leveluplife.models.rating import RatingBase
 from leveluplife.models.reaction import ReactionBase
+from leveluplife.models.relationship import QuestStatus
 from leveluplife.models.table import User
 from leveluplife.models.task import TaskBase
 from leveluplife.models.user import UserBase
@@ -24,6 +26,7 @@ class UserView(UserBase):
     ratings: list["RatingView"] = []
     comments: list["CommentView"] = []
     reactions: list["ReactionView"] = []
+    quests: list["QuestUserView"] = []
 
 
 class TaskView(TaskBase):
@@ -63,3 +66,20 @@ class ReactionView(ReactionBase):
     created_at: datetime
     updated_at: datetime | None = None
     deleted_at: datetime | None = None
+
+
+class QuestView(QuestBase):
+    id: UUID
+    created_at: datetime
+    updated_at: datetime | None = None
+    deleted_at: datetime | None = None
+
+
+class QuestUserView(QuestView):
+    status: QuestStatus
+    quest_start: datetime
+    quest_end: datetime | None = None
+
+
+class QuestWithUser(QuestView):
+    users: list["User"]

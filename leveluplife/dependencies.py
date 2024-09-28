@@ -3,6 +3,7 @@ from sqlmodel import Session
 
 from leveluplife.controllers.comment import CommentController
 from leveluplife.controllers.item import ItemController
+from leveluplife.controllers.quest import QuestController
 from leveluplife.controllers.rating import RatingController
 from leveluplife.controllers.reaction import ReactionController
 from leveluplife.controllers.task import TaskController
@@ -42,3 +43,7 @@ def get_comment_controller(
     session: Session = Depends(get_session),
 ) -> CommentController:
     return CommentController(session)
+
+
+def get_quest_controller(session: Session = Depends(get_session)) -> QuestController:
+    return QuestController(session)

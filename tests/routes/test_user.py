@@ -67,6 +67,7 @@ async def test_create_user(
         "ratings": [],
         "comments": [],
         "reactions": [],
+        "quests": [],
     }
 
 
@@ -178,6 +179,7 @@ async def test_get_users(
             "ratings": [],
             "comments": [],
             "reactions": [],
+            "quests": [],
         }
         for user in mock_users
     ]
@@ -225,6 +227,7 @@ async def test_get_user_by_id(
         "ratings": [],
         "comments": [],
         "reactions": [],
+        "quests": [],
     }
 
 
@@ -295,6 +298,7 @@ async def test_get_user_by_username(
         "ratings": [],
         "comments": [],
         "reactions": [],
+        "quests": [],
     }
 
 
@@ -367,6 +371,7 @@ async def test_get_user_by_email(
         "ratings": [],
         "comments": [],
         "reactions": [],
+        "quests": [],
     }
 
 
@@ -457,6 +462,7 @@ async def test_get_users_by_tribe(
             "ratings": [],
             "comments": [],
             "reactions": [],
+            "quests": [],
         }
         for user in mock_users
         if user.tribe == Tribe.NOSFERATI
@@ -510,6 +516,7 @@ async def test_update_user(
         "ratings": [],
         "comments": [],
         "reactions": [],
+        "quests": [],
     }
 
 
@@ -614,6 +621,7 @@ async def test_update_user_password(
         "ratings": [],
         "comments": [],
         "reactions": [],
+        "quests": [],
     }
 
 
@@ -708,4 +716,5 @@ async def test_equip_item_to_user(
         "ratings": [],
         "comments": [],
         "reactions": [],
+        "quests": [],
     }
