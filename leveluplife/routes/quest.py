@@ -74,23 +74,18 @@ async def assign_quest_to_user(
     user_quest_link_create: UserQuestLinkCreate,
     quest_controller: QuestController = Depends(get_quest_controller),
 ) -> QuestWithUser:
-    # Get the current datetime as the start time
     quest_start = datetime.now()
 
-    # Retrieve the quest to access its type and calculate the end time
     quest = await quest_controller.get_quest_by_id(quest_id)
 
-    # Ensure the quest is found
     if not quest:
         raise QuestNotFoundError(quest_id=quest_id)
 
-    # Determine the end time based on the quest's type
     quest_duration = timedelta(
         days=quest.type.duration
-    )  # Using the duration defined in the Type enum
+    )
     quest_end = quest_start + quest_duration
 
-    # Call the controller method to assign the quest to the user
     return QuestWithUser.model_validate(
         await quest_controller.assign_quest_to_user(
             quest_id,
