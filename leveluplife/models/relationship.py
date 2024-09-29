@@ -42,3 +42,10 @@ class UserQuestLink(DBModel, table=True):
     def update_status(self):
         if self.quest_end and datetime.now() > self.quest_end:
             self.status = QuestStatus.EXPIRED
+
+
+class UserQuestLinkCreate(DBModel):
+    user_ids: list[UUID]
+    quest_start: datetime | None = None
+    quest_end: datetime | None = None
+    status: QuestStatus = QuestStatus.ACTIVE

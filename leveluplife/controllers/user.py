@@ -397,7 +397,6 @@ class UserController:
                 quest_key = (quest.id, user.id)
                 if quest_key not in users[user.id]["quests"]:
                     users[user.id]["quests"][quest_key] = QuestUserView(
-                        user_id=user.id,
                         quest_start=user_quest_link.quest_start,
                         quest_end=user_quest_link.quest_end,
                         status=user_quest_link.status,

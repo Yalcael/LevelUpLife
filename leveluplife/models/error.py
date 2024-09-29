@@ -317,3 +317,52 @@ class QuestNotFoundError(BaseError):
         super().__init__(
             name=self.name, message=self.message, status_code=self.status_code
         )
+
+
+class QuestAlreadyInUserError(BaseError):
+    def __init__(
+        self,
+        username: str,
+        quest_id: UUID,
+        status_code: int = 409,
+        name: str = "QuestAlreadyInUserError",
+    ):
+        self.name = name
+        self.message = (
+            f"User {username} already have the quest {quest_id} in his/her account."
+        )
+        self.status_code = status_code
+        super().__init__(
+            name=self.name, message=self.message, status_code=self.status_code
+        )
+
+
+class QuestLinkToUserNotFoundError(BaseError):
+    def __init__(
+        self,
+        quest_id: UUID,
+        status_code: int = 404,
+        name: str = "QuestLinkToUserNotFoundError",
+    ):
+        self.name = name
+        self.message = f"ItemLinkToUserNotFoundError with Item ID {quest_id} not found in the inventory."
+        self.status_code = status_code
+        super().__init__(
+            name=self.name, message=self.message, status_code=self.status_code
+        )
+
+
+class QuestInUserNotFoundError(BaseError):
+    def __init__(
+        self,
+        quest_id: UUID,
+        user_id: UUID,
+        status_code: int = 404,
+        name: str = "QuestInUserNotFoundError",
+    ):
+        self.name = name
+        self.message = f"Quest: {quest_id} in User: {user_id} not found."
+        self.status_code = status_code
+        super().__init__(
+            name=self.name, message=self.message, status_code=self.status_code
+        )

@@ -6,9 +6,20 @@ from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlmodel import Session, select
 from loguru import logger
 
-from leveluplife.models.error import QuestAlreadyExistsError, QuestNotFoundError
+from leveluplife.models.error import (
+    QuestAlreadyExistsError,
+    QuestNotFoundError,
+    QuestInUserNotFoundError,
+    QuestAlreadyInUserError,
+)
 from leveluplife.models.quest import QuestCreate, QuestUpdate
-from leveluplife.models.table import Quest
+from leveluplife.models.relationship import (
+    UserQuestLinkCreate,
+    UserQuestLink,
+    QuestStatus,
+)
+from leveluplife.models.table import Quest, User
+from leveluplife.models.view import QuestWithUser
 
 
 class QuestController:
@@ -64,3 +75,49 @@ class QuestController:
             return self.session.exec(select(Quest).where(Quest.id == quest_id)).one()
         except NoResultFound:
             raise QuestNotFoundError(quest_id=quest_id)
+
+    async def assign_quest_to_user(
+        self,
+        quest_id: UUID,
+        user_quest_link_create: UserQuestLinkCreate,
+        quest_start: datetime,
+        quest_end: datetime | None = None,
+        status: QuestStatus = QuestStatus.ACTIVE,
+    ) -> QuestWithUser:
+        try:
+            quest = self.session.exec(select(Quest).where(Quest.id == quest_id)).one()
+            users = []
+            for user_id in user_quest_link_create.user_ids:
+                user = self.session.exec(select(User).where(User.id == user_id)).one()
+                users.append(user)
+
+                user_quest_link = UserQuestLink(
+                    user_id=user_id,
+                    quest_id=quest_id,
+                    quest_start=quest_start,
+                    quest_end=quest_end,
+                    status=status,
+                )
+                self.session.add(user_quest_link)
+
+            self.session.commit()
+            self.session.refresh(quest)
+
+            return QuestWithUser(**quest.model_dump(), users=users)
+        except NoResultFound:
+            raise QuestNotFoundError(quest_id=quest_id)
+        except IntegrityError:
+            self.session.rollback()
+            raise QuestAlreadyInUserError(username=user.username, quest_id=quest_id)
+
+    async def remove_quest_from_user(self, quest_id: UUID, user_id: UUID) -> None:
+        try:
+            user_quest_link = self.session.exec(
+                select(UserQuestLink)
+                .where(UserQuestLink.quest_id == quest_id)
+                .where(UserQuestLink.user_id == user_id)
+            ).one()
+            self.session.delete(user_quest_link)
+            self.session.commit()
+        except NoResultFound:
+            raise QuestInUserNotFoundError(quest_id=quest_id, user_id=user_id)
