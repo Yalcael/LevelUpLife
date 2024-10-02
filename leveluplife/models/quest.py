@@ -19,7 +19,7 @@ class Type(str, Enum):
 
 
 class QuestBase(DBModel):
-    name: str = Field(max_length=144)
+    name: str = Field(max_length=144, unique=True, index=True)
     description: str = Field(max_length=369)
     xp_reward: int = Field(default=0)
     type: Type

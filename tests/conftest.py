@@ -10,6 +10,7 @@ from leveluplife.api import create_app
 from leveluplife.auth.utils import get_current_active_user
 from leveluplife.controllers.comment import CommentController
 from leveluplife.controllers.item import ItemController
+from leveluplife.controllers.quest import QuestController
 from leveluplife.controllers.rating import RatingController
 from leveluplife.controllers.reaction import ReactionController
 from leveluplife.controllers.task import TaskController
@@ -79,6 +80,11 @@ def get_comment_controller(session: Session) -> CommentController:
 @pytest.fixture(name="reaction_controller")
 def get_reaction_controller(session: Session) -> ReactionController:
     return ReactionController(session)
+
+
+@pytest.fixture(name="quest_controller")
+def get_quest_controller(session: Session) -> QuestController:
+    return QuestController(session)
 
 
 @pytest.fixture(name="app")

@@ -81,9 +81,7 @@ async def assign_quest_to_user(
     if not quest:
         raise QuestNotFoundError(quest_id=quest_id)
 
-    quest_duration = timedelta(
-        days=quest.type.duration
-    )
+    quest_duration = timedelta(days=quest.type.duration)
     quest_end = quest_start + quest_duration
 
     return QuestWithUser.model_validate(
